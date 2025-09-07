@@ -33,7 +33,10 @@ export function formatAsFlat(result: ScanResult, options: TreeOptions): string {
   
   lines.push('');
   lines.push(chalk.dim(`Summary: ${formatTokenCount(result.totalTokens, options.colors)} tokens, ${result.totalFiles} files, ${totalSize}`));
-  lines.push(chalk.dim(`Cache: ${result.cacheHits} hits, ${result.cacheMisses} misses (${cacheHitRate}% hit rate)`));
+  
+  if (options.debug) {
+    lines.push(chalk.dim(`Cache: ${result.cacheHits} hits, ${result.cacheMisses} misses (${cacheHitRate}% hit rate)`));
+  }
 
   return lines.join('\n');
 }

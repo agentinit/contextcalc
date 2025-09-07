@@ -85,6 +85,7 @@ export interface TreeOptions {
   absolutePercentages: boolean;
   showBars: boolean;
   colors: boolean;
+  debug: boolean;
 }
 
 export interface FileStats {

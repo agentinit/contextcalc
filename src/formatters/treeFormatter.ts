@@ -27,7 +27,10 @@ export function formatAsTree(result: ScanResult): string {
 
   lines.push('');
   lines.push(chalk.dim(`Summary: ${formatTokenCount(result.totalTokens)} tokens, ${result.totalFiles} files`));
-  lines.push(chalk.dim(`Cache: ${result.cacheHits} hits, ${result.cacheMisses} misses (${cacheHitRate}% hit rate)`));
+  
+  if (options.debug) {
+    lines.push(chalk.dim(`Cache: ${result.cacheHits} hits, ${result.cacheMisses} misses (${cacheHitRate}% hit rate)`));
+  }
 
   return lines.join('\n');
 }

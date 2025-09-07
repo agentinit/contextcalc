@@ -45,6 +45,7 @@ program
       const sortBy = validateSortBy(options.sort);
       const maxFileSize = parseFileSize(options.maxSize);
       const metrics = parseMetrics(options.metrics);
+      const isDebug = process.env.DEBUG === '1' || process.env.DEBUG?.toLowerCase() === 'true';
       
       console.log(chalk.dim(`Analyzing ${projectPath} in ${mode} mode...`));
       
@@ -75,7 +76,8 @@ program
           metrics: finalMetrics,
           absolutePercentages: !options.relativePercentages && finalMetrics.showPercentages,
           showBars: Boolean(options.bars), // Only true if --bars is explicitly provided
-          colors: !options.noColors // Colors enabled by default unless --no-colors
+          colors: !options.noColors, // Colors enabled by default unless --no-colors
+          debug: isDebug
         };
         
         // Calculate percentages if needed for visualization
