@@ -51,12 +51,26 @@ export enum TreeSortBy {
   NAME = 'name'
 }
 
+export enum MetricType {
+  TOKENS = 'tokens',
+  LINES = 'lines', 
+  SIZE = 'size',
+  PERCENTAGE = 'percentage'
+}
+
 export interface CliOptions {
   mode: AnalysisMode;
   maxSize: string;
   output: OutputFormat;
   gitignore: boolean;
   defaultIgnores: boolean;
+}
+
+export interface MetricSettings {
+  showTokens: boolean;
+  showLines: boolean;
+  showSize: boolean;
+  showPercentages: boolean;
 }
 
 export interface TreeOptions {
@@ -67,7 +81,7 @@ export interface TreeOptions {
   sort: TreeSortBy;
   depth?: number;
   minTokens?: number;
-  showPercentages: boolean;
+  metrics: MetricSettings;
   absolutePercentages: boolean;
   showBars: boolean;
   colors: boolean;

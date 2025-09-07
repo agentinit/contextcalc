@@ -65,14 +65,12 @@ function formatFile(file: FileNode, options: TreeOptions): string {
   
   // Create percentage text if enabled
   let percentageText = '';
-  if (options.showPercentages && file.percentage !== undefined) {
+  if (options.metrics.showPercentages && file.percentage !== undefined) {
     const color = options.colors ? getPercentageColor(file.percentage) : (text: string) => text;
     percentageText = ` ${color(`(${file.percentage.toFixed(1)}%)`)}`;
   }
   
-  const info = options.colors 
-    ? chalk.dim(`${tokenCount} tokens, ${file.lines} lines, ${fileSize}`)
-    : `${tokenCount} tokens, ${file.lines} lines, ${fileSize}`;
+  const info = buildFileInfo(tokenCount, file.lines, fileSize, options);
     
   return `${weightBar}${fileName} ${info}${percentageText}`;
 }
@@ -152,4 +150,23 @@ function formatFileSize(bytes: number): string {
   
   const size = (bytes / Math.pow(k, i)).toFixed(1);
   return `${size}${units[i]}`;
+}
+
+function buildFileInfo(tokenCount: string, lines: number, fileSize: string, options: TreeOptions): string {
+  const parts = [];
+  
+  if (options.metrics.showTokens) {
+    parts.push(`${tokenCount} tokens`);
+  }
+  
+  if (options.metrics.showLines) {
+    parts.push(`${lines} lines`);
+  }
+  
+  if (options.metrics.showSize) {
+    parts.push(fileSize);
+  }
+  
+  const info = parts.join(', ');
+  return options.colors ? chalk.dim(info) : info;
 }

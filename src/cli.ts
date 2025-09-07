@@ -7,7 +7,7 @@ import { formatAsTree } from './formatters/treeFormatter.js';
 import { formatAsJson } from './formatters/jsonFormatter.js';
 import { formatAsEnhancedTree } from './formatters/enhancedTreeFormatter.js';
 import { formatAsFlat } from './formatters/flatFormatter.js';
-import { AnalysisMode, OutputFormat, TreeSortBy, TreeOptions } from './types/index.js';
+import { AnalysisMode, OutputFormat, TreeSortBy, TreeOptions, MetricType, MetricSettings } from './types/index.js';
 import { resolveProjectPath, parseFileSize } from './utils/pathUtils.js';
 
 const program = new Command();
@@ -26,10 +26,10 @@ program
   .option('--sort <by>', 'Sort by: tokens, size, name', 'tokens')
   .option('--depth <n>', 'Maximum tree depth to display', parseInt)
   .option('--min-tokens <n>', 'Hide files with fewer than n tokens', parseInt)
+  .option('--metrics <list>', 'Metrics to display: tokens,lines,size,percentage', 'tokens,lines,size,percentage')
   .addOption(new Option('--percentages', 'Show percentage of total project tokens').default(true).hideHelp())
   .option('--no-percentages', 'Disable percentage display')
   .option('--relative-percentages', 'Show percentage of parent directory')
-  .addOption(new Option('--no-bars', 'Disable visual weight bars').hideHelp())
   .option('--bars', 'Show visual weight bars')
   .option('--no-colors', 'Disable colored output')
   .option('--no-gitignore', 'Ignore .gitignore files')
@@ -44,6 +44,7 @@ program
       const outputFormat = validateOutputFormat(options.output);
       const sortBy = validateSortBy(options.sort);
       const maxFileSize = parseFileSize(options.maxSize);
+      const metrics = parseMetrics(options.metrics);
       
       console.log(chalk.dim(`Analyzing ${projectPath} in ${mode} mode...`));
       
@@ -57,6 +58,12 @@ program
         console.log(formatAsJson(result));
       } else if (outputFormat === OutputFormat.TREE || outputFormat === OutputFormat.FLAT) {
         // Tree and flat formats need tree options and percentage calculations
+        // Handle backward compatibility for percentage options
+        let finalMetrics = metrics;
+        if (options.percentages === false) {
+          finalMetrics = { ...metrics, showPercentages: false };
+        }
+        
         const treeOptions: TreeOptions = {
           mode,
           maxSize: options.maxSize,
@@ -65,14 +72,14 @@ program
           sort: sortBy,
           depth: options.depth,
           minTokens: options.minTokens,
-          showPercentages: options.percentages ?? true, // Default to true, --no-percentages sets to false
-          absolutePercentages: !options.relativePercentages && (options.percentages ?? true),
-          showBars: options.bars ?? false, // Default to false if not specified
+          metrics: finalMetrics,
+          absolutePercentages: !options.relativePercentages && finalMetrics.showPercentages,
+          showBars: Boolean(options.bars), // Only true if --bars is explicitly provided
           colors: !options.noColors // Colors enabled by default unless --no-colors
         };
         
         // Calculate percentages if needed for visualization
-        const shouldCalculatePercentages = treeOptions.showPercentages || treeOptions.showBars;
+        const shouldCalculatePercentages = treeOptions.metrics.showPercentages || treeOptions.showBars;
         const nodesWithPercentages = shouldCalculatePercentages 
           ? DirectoryScanner.calculatePercentages(result.nodes, treeOptions.absolutePercentages, result.totalTokens)
           : result.nodes;
@@ -126,6 +133,25 @@ function validateSortBy(sort: string): TreeSortBy {
     throw new Error(`Invalid sort option: ${sort}. Valid options: ${validSorts.join(', ')}`);
   }
   return sort as TreeSortBy;
+}
+
+function parseMetrics(metricsString: string): MetricSettings {
+  const metrics = metricsString.split(',').map(m => m.trim().toLowerCase());
+  const validMetrics = Object.values(MetricType);
+  
+  // Validate all metrics
+  for (const metric of metrics) {
+    if (!validMetrics.includes(metric as MetricType)) {
+      throw new Error(`Invalid metric: ${metric}. Valid options: ${validMetrics.join(', ')}`);
+    }
+  }
+  
+  return {
+    showTokens: metrics.includes(MetricType.TOKENS),
+    showLines: metrics.includes(MetricType.LINES),
+    showSize: metrics.includes(MetricType.SIZE),
+    showPercentages: metrics.includes(MetricType.PERCENTAGE)
+  };
 }
 
 program.parse();

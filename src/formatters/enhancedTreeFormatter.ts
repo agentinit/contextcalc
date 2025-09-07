@@ -64,22 +64,18 @@ function formatEnhancedNode(node: Node, context: TreeContext, options: TreeOptio
   
   // Create percentage text if enabled
   let percentageText = '';
-  if (options.showPercentages && node.percentage !== undefined) {
+  if (options.metrics.showPercentages && node.percentage !== undefined) {
     const color = options.colors ? getPercentageColor(node.percentage) : (text: string) => text;
     percentageText = ` ${color(`(${node.percentage.toFixed(1)}%)`)}`;
   }
   
   if (node.type === 'file') {
     const fileName = options.colors ? chalk.cyan(node.path) : node.path;
-    const info = options.colors 
-      ? chalk.dim(`(${tokenCount} tokens, ${node.lines} lines, ${fileSize})`)
-      : `(${tokenCount} tokens, ${node.lines} lines, ${fileSize})`;
+    const info = buildFileInfo(tokenCount, node.lines, fileSize, options);
     lines.push(`${prefix}${weightBar}${fileName} ${info}${percentageText}`);
   } else {
     const folderName = options.colors ? chalk.blue.bold(node.path) : node.path;
-    const info = options.colors
-      ? chalk.dim(`(${tokenCount} tokens, ${fileSize})`)
-      : `(${tokenCount} tokens, ${fileSize})`;
+    const info = buildFolderInfo(tokenCount, fileSize, options);
     lines.push(`${prefix}${weightBar}${folderName} ${info}${percentageText}`);
     
     // Sort and filter children
@@ -223,4 +219,38 @@ function formatFileSize(bytes: number): string {
   
   const size = (bytes / Math.pow(k, i)).toFixed(1);
   return `${size}${units[i]}`;
+}
+
+function buildFileInfo(tokenCount: string, lines: number, fileSize: string, options: TreeOptions): string {
+  const parts = [];
+  
+  if (options.metrics.showTokens) {
+    parts.push(`${tokenCount} tokens`);
+  }
+  
+  if (options.metrics.showLines) {
+    parts.push(`${lines} lines`);
+  }
+  
+  if (options.metrics.showSize) {
+    parts.push(fileSize);
+  }
+  
+  const info = parts.length > 0 ? `(${parts.join(', ')})` : '';
+  return options.colors ? chalk.dim(info) : info;
+}
+
+function buildFolderInfo(tokenCount: string, fileSize: string, options: TreeOptions): string {
+  const parts = [];
+  
+  if (options.metrics.showTokens) {
+    parts.push(`${tokenCount} tokens`);
+  }
+  
+  if (options.metrics.showSize) {
+    parts.push(fileSize);
+  }
+  
+  const info = parts.length > 0 ? `(${parts.join(', ')})` : '';
+  return options.colors ? chalk.dim(info) : info;
 }
