@@ -9,7 +9,7 @@
     "contextcalc": "./dist/cli.js"
   },
   "scripts": {
-    "build": "bun build src/cli.ts --outdir dist --target node --format esm && chmod +x dist/cli.js",
+    "build": "bun build src/cli.ts --outdir dist --target node --format esm && cp node_modules/tiktoken/tiktoken_bg.wasm dist/ && chmod +x dist/cli.js",
     "dev": "bun run src/cli.ts",
     "test": "bun test",
     "typecheck": "bun run tsc --noEmit",
@@ -43,6 +43,9 @@
     "eslint": "^9.35.0",
     "typescript-eslint": "^8.42.0"
   },
+  "files": [
+    "dist/"
+  ],
   "peerDependencies": {
     "typescript": "^5"
   },

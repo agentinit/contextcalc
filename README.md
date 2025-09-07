@@ -14,13 +14,13 @@ npx contextcalc [path] [options]
 
 ```bash
 # Clean tree view with absolute percentages (default)
-contextcalc .
+npx contextcalc .
 
 # Flat file list sorted by token count  
-contextcalc . --output flat
+npx contextcalc . --output flat
 
 # Enhanced view with visual bars
-contextcalc . --bars
+npx contextcalc . --bars
 ```
 
 ## Output Formats
@@ -28,7 +28,7 @@ contextcalc . --bars
 ### Tree View (default)
 Shows hierarchical structure with absolute percentages:
 ```bash
-contextcalc . --depth 2
+npx contextcalc . --depth 2
 ```
 ```
 . (11.8k tokens, 42.5KB) (100.0%)
@@ -45,7 +45,7 @@ Completed in 0.18s
 ### Enhanced Tree View
 Add visual bars for extra clarity:
 ```bash
-contextcalc . --bars --depth 2
+npx contextcalc . --bars --depth 2
 ```
 ```
 [██████████] . (11.8k tokens, 42.5KB) (100.0%)
@@ -58,7 +58,7 @@ contextcalc . --bars --depth 2
 ### Flat View
 Lists all files sorted by token count (perfect for finding large files):
 ```bash
-contextcalc . --output flat --min-tokens 500
+npx contextcalc . --output flat --min-tokens 500
 ```
 ```
 src/formatters/enhancedTreeFormatter.ts 1.8k tokens, 226 lines, 6.5KB (13.1%)
@@ -71,7 +71,7 @@ src/utils/fileDetector.ts 922 tokens, 123 lines, 3.0KB (6.7%)
 ### JSON Output
 Structured data for scripts and automation:
 ```bash
-contextcalc . --output json
+npx contextcalc . --output json
 ```
 
 ## Key Options
@@ -92,25 +92,25 @@ contextcalc . --output json
 
 ```bash
 # Find largest files in project
-contextcalc . -o flat --min-tokens 1000
+npx contextcalc . -o flat --min-tokens 1000
 
 # Show relative percentages (percentage of parent directory)
-contextcalc . --relative-percentages --depth 2
+npx contextcalc . --relative-percentages --depth 2
 
 # Enhanced view with visual bars
-contextcalc . --bars --depth 2
+npx contextcalc . --bars --depth 2
 
 # Clean output without percentages/colors
-contextcalc . --no-percentages --no-colors
+npx contextcalc . --no-percentages --no-colors
 
 # Analyze only source code files
-contextcalc . --mode code
+npx contextcalc . --mode code
 
 # Analyze only documentation
-contextcalc ./docs --mode docs
+npx contextcalc ./docs --mode docs
 
 # Export data for analysis
-contextcalc . -o json > analysis.json
+npx contextcalc . -o json > analysis.json
 ```
 
 ## Why contextcalc?
