@@ -83,7 +83,7 @@ npx contextcalc . --output json
 | `--no-percentages` | Disable percentage display | |
 | `--relative-percentages` | Show percentages relative to parent directory | `false` |
 | `--bars` | Show visual weight bars | `false` |
-| `--depth <n>` | Maximum tree depth | unlimited |
+| `--depth <n>` | Tree depth levels (0=root only, 1=root+children, etc.) | unlimited |
 | `--min-tokens <n>` | Hide files with fewer tokens | `0` |
 | `--sort <by>` | Sort by: `tokens`, `size`, `name` | `tokens` |
 | `--mode <mode>` | Files to analyze: `all`, `code`, `docs` | `all` |
