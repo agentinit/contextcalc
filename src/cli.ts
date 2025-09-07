@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import { DirectoryScanner } from './core/scanner.js';
 import { formatAsTree } from './formatters/treeFormatter.js';
@@ -26,11 +26,11 @@ program
   .option('--sort <by>', 'Sort by: tokens, size, name', 'tokens')
   .option('--depth <n>', 'Maximum tree depth to display', parseInt)
   .option('--min-tokens <n>', 'Hide files with fewer than n tokens', parseInt)
-  .option('--percentages', 'Show percentage of total project tokens', true)
+  .addOption(new Option('--percentages', 'Show percentage of total project tokens').default(true).hideHelp())
   .option('--no-percentages', 'Disable percentage display')
-  .option('--relative-percentages', 'Show percentage of parent directory', false)
-  .option('--bars', 'Show visual weight bars', false)
-  .option('--no-bars', 'Disable visual weight bars')
+  .option('--relative-percentages', 'Show percentage of parent directory')
+  .addOption(new Option('--no-bars', 'Disable visual weight bars').hideHelp())
+  .option('--bars', 'Show visual weight bars')
   .option('--no-colors', 'Disable colored output')
   .option('--no-gitignore', 'Ignore .gitignore files')
   .option('--no-default-ignores', 'Disable default ignore patterns')
@@ -65,9 +65,9 @@ program
           sort: sortBy,
           depth: options.depth,
           minTokens: options.minTokens,
-          showPercentages: options.percentages,
-          absolutePercentages: !options.relativePercentages && options.percentages,
-          showBars: options.bars, // Use the bars option directly
+          showPercentages: options.percentages ?? true, // Default to true, --no-percentages sets to false
+          absolutePercentages: !options.relativePercentages && (options.percentages ?? true),
+          showBars: options.bars ?? false, // Default to false if not specified
           colors: !options.noColors // Colors enabled by default unless --no-colors
         };
         
