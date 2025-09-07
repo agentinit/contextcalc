@@ -9,7 +9,7 @@
     "contextcalc": "./dist/cli.js"
   },
   "scripts": {
-    "build": "bun build src/cli.ts --outdir dist --target node --format esm && cp node_modules/tiktoken/tiktoken_bg.wasm dist/ && chmod +x dist/cli.js",
+    "build": "bun build src/cli.ts --outdir dist --target node --format esm --external tiktoken && chmod +x dist/cli.js",
     "dev": "bun run src/cli.ts",
     "test": "bun test",
     "typecheck": "bun run tsc --noEmit",
