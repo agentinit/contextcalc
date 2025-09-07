@@ -6,6 +6,7 @@ import { DirectoryScanner } from './core/scanner.js';
 import { formatAsTree } from './formatters/treeFormatter.js';
 import { formatAsJson } from './formatters/jsonFormatter.js';
 import { formatAsEnhancedTree } from './formatters/enhancedTreeFormatter.js';
+import { formatAsFlat } from './formatters/flatFormatter.js';
 import { AnalysisMode, OutputFormat, TreeSortBy, TreeOptions } from './types/index.js';
 import { resolveProjectPath, parseFileSize } from './utils/pathUtils.js';
 
@@ -19,16 +20,16 @@ program
 // Main command with enhanced tree features
 program
   .argument('[path]', 'Path to analyze', '.')
-  .option('--mode <mode>', 'Analysis mode: all, code, docs', 'code')
+  .option('--mode <mode>', 'Analysis mode: all, code, docs', 'all')
   .option('--max-size <size>', 'Maximum file size to analyze (e.g., 10M, 500k)', '10M')
-  .option('--output <format>', 'Output format: tree, json', 'tree')
+  .option('-o, --output <format>', 'Output format: tree, json, flat', 'tree')
   .option('--sort <by>', 'Sort by: tokens, size, name', 'tokens')
   .option('--depth <n>', 'Maximum tree depth to display', parseInt)
   .option('--min-tokens <n>', 'Hide files with fewer than n tokens', parseInt)
-  .option('--percentages', 'Show percentage of parent directory', true)
+  .option('--percentages', 'Show percentage of total project tokens', true)
   .option('--no-percentages', 'Disable percentage display')
-  .option('--absolute-percentages', 'Show percentage of total project tokens', false)
-  .option('--bars', 'Show visual weight bars', true)
+  .option('--relative-percentages', 'Show percentage of parent directory', false)
+  .option('--bars', 'Show visual weight bars', false)
   .option('--no-bars', 'Disable visual weight bars')
   .option('--no-colors', 'Disable colored output')
   .option('--no-gitignore', 'Ignore .gitignore files')
@@ -54,8 +55,8 @@ program
       
       if (outputFormat === OutputFormat.JSON) {
         console.log(formatAsJson(result));
-      } else {
-        // Use enhanced tree formatter with bars by default
+      } else if (outputFormat === OutputFormat.TREE || outputFormat === OutputFormat.FLAT) {
+        // Tree and flat formats need tree options and percentage calculations
         const treeOptions: TreeOptions = {
           mode,
           maxSize: options.maxSize,
@@ -65,7 +66,7 @@ program
           depth: options.depth,
           minTokens: options.minTokens,
           showPercentages: options.percentages,
-          absolutePercentages: options.absolutePercentages && options.percentages,
+          absolutePercentages: !options.relativePercentages && options.percentages,
           showBars: options.bars, // Use the bars option directly
           colors: !options.noColors // Colors enabled by default unless --no-colors
         };
@@ -80,11 +81,15 @@ program
           nodes: nodesWithPercentages
         };
         
-        console.log(formatAsEnhancedTree(enhancedResult, treeOptions));
+        if (outputFormat === OutputFormat.FLAT) {
+          console.log(formatAsFlat(enhancedResult, treeOptions));
+        } else {
+          console.log(formatAsEnhancedTree(enhancedResult, treeOptions));
+        }
       }
       
       const duration = ((endTime - startTime) / 1000).toFixed(2);
-      if (outputFormat === OutputFormat.TREE) {
+      if (outputFormat === OutputFormat.TREE || outputFormat === OutputFormat.FLAT) {
         if (!options.noColors) {
           console.log(chalk.dim(`Completed in ${duration}s`));
         } else {

@@ -1,194 +1,131 @@
 # contextcalc
 
-A fast CLI tool for analyzing codebase structure and token counts for LLM context management with enhanced tree visualization.
+A fast CLI tool for analyzing codebase structure and token counts for LLM context management.
 
 ## Installation
 
-### Global Installation
 ```bash
 npm install -g contextcalc
-```
-
-### Using npx (no installation required)
-```bash
+# or
 npx contextcalc [path] [options]
 ```
 
-### Using bunx (if you have Bun installed)
-```bash
-bunx contextcalc [path] [options]
-```
+## Quick Start
 
-## Usage
-
-### Basic Usage
 ```bash
-# Enhanced visualization with weight bars (default)
+# Clean tree view with absolute percentages (default)
 contextcalc .
 
-# Clean output without visual enhancements
-contextcalc . --no-bars --no-colors
+# Flat file list sorted by token count  
+contextcalc . --output flat
 
-# Analyze specific directory
-contextcalc ./src
+# Enhanced view with visual bars
+contextcalc . --bars
+```
 
-# Show percentages and sort by file size
-contextcalc . --show-percentages --sort size
+## Output Formats
 
-# Limit depth and filter small files
-contextcalc . --depth 3 --min-tokens 100
+### Tree View (default)
+Shows hierarchical structure with absolute percentages:
+```bash
+contextcalc . --depth 2
+```
+```
+. (11.8k tokens, 42.5KB) (100.0%)
+├── src (9.0k tokens, 35.1KB) (76.3%)
+├── bun.lock (1.4k tokens, 2.6KB) (11.9%)
+├── test (812 tokens, 3.0KB) (6.9%)
+└── package.json (313 tokens, 924B) (2.7%)
 
-# Output as JSON for programmatic use
+Summary: 11.8k tokens, 20 files, 42.5KB
+Cache: 20 hits, 0 misses (100.0% hit rate)
+Completed in 0.18s
+```
+
+### Enhanced Tree View
+Add visual bars for extra clarity:
+```bash
+contextcalc . --bars --depth 2
+```
+```
+[██████████] . (11.8k tokens, 42.5KB) (100.0%)
+├── [████████░░] src (9.0k tokens, 35.1KB) (76.3%)
+├── [█░░░░░░░░░] bun.lock (1.4k tokens, 2.6KB) (11.9%)
+├── [█░░░░░░░░░] test (812 tokens, 3.0KB) (6.9%)
+└── [░░░░░░░░░░] package.json (313 tokens, 924B) (2.7%)
+```
+
+### Flat View
+Lists all files sorted by token count (perfect for finding large files):
+```bash
+contextcalc . --output flat --min-tokens 500
+```
+```
+src/formatters/enhancedTreeFormatter.ts 1.8k tokens, 226 lines, 6.5KB (13.1%)
+src/core/scanner.ts 1.5k tokens, 226 lines, 6.7KB (11.5%)
+bun.lock 1.4k tokens, 48 lines, 2.6KB (10.1%)
+src/cli.ts 1.2k tokens, 131 lines, 5.3KB (9.3%)
+src/utils/fileDetector.ts 922 tokens, 123 lines, 3.0KB (6.7%)
+```
+
+### JSON Output
+Structured data for scripts and automation:
+```bash
 contextcalc . --output json
 ```
 
-### CLI Options
+## Key Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--mode <mode>` | Analysis mode: `all`, `code`, `docs` | `code` |
-| `--max-size <size>` | Maximum file size to analyze (e.g., 10M, 500k) | `10M` |
-| `--output <format>` | Output format: `tree`, `json` | `tree` |
+| `-o, --output <format>` | Output format: `tree`, `flat`, `json` | `tree` |
+| `--percentages` | Show absolute percentages (enabled by default) | `true` |
+| `--no-percentages` | Disable percentage display | |
+| `--relative-percentages` | Show percentages relative to parent directory | `false` |
+| `--bars` | Show visual weight bars | `false` |
+| `--depth <n>` | Maximum tree depth | unlimited |
+| `--min-tokens <n>` | Hide files with fewer tokens | `0` |
 | `--sort <by>` | Sort by: `tokens`, `size`, `name` | `tokens` |
-| `--depth <n>` | Maximum tree depth to display | unlimited |
-| `--min-tokens <n>` | Hide files with fewer than n tokens | 0 |
-| `--show-percentages` | Show percentage of parent directory | false |
-| `--no-bars` | Disable visual weight bars | false |
-| `--no-colors` | Disable colored output | false |
-| `--no-gitignore` | Ignore .gitignore files | false |
-| `--no-default-ignores` | Disable default ignore patterns | false |
+| `--mode <mode>` | Files to analyze: `all`, `code`, `docs` | `all` |
 
-### Analysis Modes
-
-- **`code`**: Analyzes source code files (.js, .py, .rs, .go, etc.)
-- **`docs`**: Analyzes documentation files (.md, .txt, .rst, etc.)
-- **`all`**: Analyzes all file types, including binaries
-
-### Advanced Examples
+## Usage Examples
 
 ```bash
-# Full-featured analysis with all visual enhancements
-contextcalc . --show-percentages --sort tokens --depth 3
+# Find largest files in project
+contextcalc . -o flat --min-tokens 1000
 
-# Focus on large files only
-contextcalc . --min-tokens 1000 --sort size
+# Show relative percentages (percentage of parent directory)
+contextcalc . --relative-percentages --depth 2
 
-# Clean output for scripts/CI
-contextcalc . --no-bars --no-colors --output json
+# Enhanced view with visual bars
+contextcalc . --bars --depth 2
 
-# Analyze specific file types
-contextcalc ./src --mode code --sort name
+# Clean output without percentages/colors
+contextcalc . --no-percentages --no-colors
 
-# Include all files, even binaries and large files
-contextcalc . --mode all --max-size 100M --no-default-ignores
+# Analyze only source code files
+contextcalc . --mode code
 
-# Documentation analysis
-contextcalc ./docs --mode docs --show-percentages
-```
+# Analyze only documentation
+contextcalc ./docs --mode docs
 
-## Sample Output
-
-### Enhanced Visualization (Default)
-
-```bash
-contextcalc . --show-percentages --depth 2
-```
-
-```
-[██████████] . (11.8k tokens, 42.5KB) (100.0%)
-├── [████████░░] src (9.0k tokens, 35.1KB) (76.9%)
-├── [█░░░░░░░░░] bun.lock (1.4k tokens, 48 lines, 2.6KB) (11.5%)
-├── [█░░░░░░░░░] test (812 tokens, 3.0KB) (6.9%)
-├── [░░░░░░░░░░] package.json (313 tokens, 36 lines, 924B) (2.7%)
-├── [░░░░░░░░░░] tsconfig.json (193 tokens, 29 lines, 713B) (1.6%)
-├── [░░░░░░░░░░] .claude (35 tokens, 100B) (0.3%)
-└── [░░░░░░░░░░] index.ts (8 tokens, 1 lines, 30B) (0.1%)
-
-Summary: 11.8k tokens, 20 files, 42.5KB
-Cache: 20 hits, 0 misses (100.0% hit rate)
-Completed in 0.18s
-```
-
-### Clean Output
-
-```bash
-contextcalc . --no-bars --no-colors --depth 2
-```
-
-```
-. (11.8k tokens, 42.5KB)
-├── src (9.0k tokens, 35.1KB)
-├── bun.lock (1.4k tokens, 48 lines, 2.6KB)
-├── test (812 tokens, 3.0KB)
-├── package.json (313 tokens, 36 lines, 924B)
-├── tsconfig.json (193 tokens, 29 lines, 713B)
-├── .claude (35 tokens, 100B)
-└── index.ts (8 tokens, 1 lines, 30B)
-
-Summary: 11.8k tokens, 20 files, 42.5KB
-Cache: 20 hits, 0 misses (100.0% hit rate)
-Completed in 0.18s
+# Export data for analysis
+contextcalc . -o json > analysis.json
 ```
 
 ## Why contextcalc?
 
-Perfect for developers working with LLMs who need to:
+**Perfect for LLM workflows:**
+- 📊 **Understand token usage** before sending code to LLMs
+- 💰 **Estimate API costs** for different context sizes
+- 🎯 **Find optimization targets** with flat view ranking
+- ⚖️ **Balance context** between completeness and token limits
 
-- **📊 Understand token usage** before sending code to LLMs
-- **💰 Estimate API costs** for LLM operations  
-- **🎯 Optimize context** by identifying large files
-- **⚖️ Balance completeness vs. limits** when including code in prompts
-- **🚀 Work efficiently** with fast analysis and smart caching
-
-Built with performance in mind:
-- **Smart Caching**: MD5-based change detection avoids re-computation
-- **Parallel Processing**: Concurrent file analysis for speed
-- **Selective Analysis**: Only processes relevant file types
-- **Ignore Support**: Respects .gitignore and common ignore patterns
-
-## Key Features
-
-### 🎯 **Enhanced Visualization**
-- **Visual Weight Bars**: Color-coded bars show relative token density (enabled by default)
-- **File Sizes**: Displays both token count and actual file size (KB/MB) 
-- **Percentage Display**: Shows each file/folder as percentage of parent directory
-- **Color Coding**: Red (high), Yellow (medium), Blue (low), Gray (minimal) token density
-
-### ⚡ **Smart Analysis**
-- **Intelligent Sorting**: Sort by tokens, file size, or alphabetically
-- **Depth Control**: Limit analysis depth for large codebases
-- **Token Filtering**: Hide files below minimum token thresholds
-- **Mode Selection**: Focus on code, documentation, or all files
-
-### 🛠️ **Flexible Output**
-- **Enhanced Mode**: Rich visualization with bars and colors (default)
-- **Clean Mode**: Simple output for scripts and CI environments
-- **JSON Export**: Structured data for programmatic use
-- **Performance**: Smart caching avoids re-computation on subsequent runs
-
-## Development
-
-This project was built with [Bun](https://bun.com) for optimal performance.
-
-### Setup
-```bash
-bun install
-```
-
-### Development
-```bash
-bun run dev [path] [options]
-```
-
-### Build
-```bash
-bun run build
-```
-
-### Test
-```bash
-bun test
-```
+**Built for speed:**
+- ⚡ **Smart caching** with MD5-based change detection
+- 🚀 **Parallel processing** for large codebases
+- 🎛️ **Flexible filtering** by tokens, depth, file types
+- 🚫 **Intelligent ignoring** via .gitignore and built-in patterns
 
 ## License
 
