@@ -51,7 +51,7 @@ export function formatAsEnhancedTree(result: ScanResult, options: TreeOptions): 
 
 function formatEnhancedNode(node: Node, context: TreeContext, options: TreeOptions): string[] {
   // Stop if we've reached max depth
-  if (context.maxDepth !== undefined && context.depth >= context.maxDepth) {
+  if (context.maxDepth !== undefined && context.depth > context.maxDepth) {
     return [];
   }
 

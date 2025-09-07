@@ -24,7 +24,7 @@ program
   .option('--max-size <size>', 'Maximum file size to analyze (e.g., 10M, 500k)', '10M')
   .option('-o, --output <format>', 'Output format: tree, json, flat', 'tree')
   .option('--sort <by>', 'Sort by: tokens, size, name', 'tokens')
-  .option('--depth <n>', 'Maximum tree depth to display', parseInt)
+  .option('--depth <n>', 'Tree depth levels to display (0=root only, 1=root+children, etc.)', parseInt)
   .option('--min-tokens <n>', 'Hide files with fewer than n tokens', parseInt)
   .option('--metrics <list>', 'Metrics to display: tokens,lines,size,percentage', 'tokens,lines,size,percentage')
   .addOption(new Option('--percentages', 'Show percentage of total project tokens').default(true).hideHelp())
