@@ -3,30 +3,79 @@ import { join, relative, resolve } from 'node:path';
 import { normalizePathSeparators } from './pathUtils.js';
 
 const DEFAULT_IGNORES = [
+  // Lock files (dependency management)
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  'bun.lockb',
+  'bun.lock',
+  'shrinkwrap.yaml',
+  'poetry.lock',
+  'Pipfile.lock',
+  'Cargo.lock',
+  'composer.lock',
+  'Gemfile.lock',
+  'go.sum',
+  'go.mod.sum',
+  'mix.lock',
+  'pubspec.lock',
+  'Podfile.lock',
+  'packages.lock.json',
+  'deno.lock',
+  'flake.lock',
+  
+  // Package managers and dependencies
+  'node_modules',
+  'bower_components',
+  '.npm',
+  '.pnpm-store',
+  '.yarn/',
+  '.pnp.js',
+  '.pnp.cjs',
+  'vendor/',
+  'pip-wheel-metadata',
+  'wheels',
+  
   // Python
   '*.pyc',
   '__pycache__',
   '.pytest_cache',
   '.coverage',
+  'htmlcov/',
   '.tox',
   '.mypy_cache',
   '.ruff_cache',
-  'poetry.lock',
-  'Pipfile.lock',
   '.Python',
-  'pip-wheel-metadata',
-  'wheels',
+  '*.egg-info',
+  '*.egg',
+  '*.whl',
   
-  // JavaScript/Node
-  'node_modules',
-  'bower_components',
-  'package-lock.json',
-  'yarn.lock',
-  '.npm',
-  '.pnpm-store',
-  'bun.lockb',
+  // JavaScript/Node/Web
   '.next',
   '.nuxt',
+  '.parcel-cache/',
+  '.turbo/',
+  '*.bundle.js',
+  '*.chunk.js',
+  '*.compiled.js',
+  
+  // Source maps and debug files
+  '*.map',
+  '*.js.map',
+  '*.css.map',
+  '*.pdb',
+  
+  // Test artifacts and coverage
+  '__snapshots__/',
+  '.jest/',
+  'test-results/',
+  '*.snap',
+  'coverage/',
+  'lcov-report/',
+  '.nyc_output',
+  
+  // Generated files
+  '*.generated.*',
   
   // Java / Rust
   'target/',
@@ -63,9 +112,6 @@ const DEFAULT_IGNORES = [
   'build',
   'dist',
   'out',
-  '*.egg-info',
-  '*.egg',
-  '*.whl',
   
   // OS generated files
   '.DS_Store',
@@ -79,7 +125,6 @@ const DEFAULT_IGNORES = [
   '.eslintcache',
   '.tmp',
   '.temp',
-  '.nyc_output',
   '.sass-cache',
   
   // Common Binary/Media files
