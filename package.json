@@ -12,8 +12,10 @@
     "build": "bun build src/cli.ts --outdir dist --target node --format esm && chmod +x dist/cli.js",
     "dev": "bun run src/cli.ts",
     "test": "bun test",
+    "typecheck": "bun run tsc --noEmit",
     "lint": "eslint src/ test/",
     "lint:fix": "eslint src/ test/ --fix",
+    "pack": "bun run build && npm pack --dry-run",
     "prepublishOnly": "bun run build"
   },
   "keywords": ["cli", "tokens", "llm", "context", "codebase", "analysis"],
