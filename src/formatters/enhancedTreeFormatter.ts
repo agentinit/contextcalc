@@ -64,7 +64,7 @@ function formatEnhancedNode(node: Node, context: TreeContext, options: TreeOptio
   
   // Create percentage text if enabled
   let percentageText = '';
-  if ((options.showPercentages || options.absolutePercentages) && node.percentage !== undefined) {
+  if (options.showPercentages && node.percentage !== undefined) {
     const color = options.colors ? getPercentageColor(node.percentage) : (text: string) => text;
     percentageText = ` ${color(`(${node.percentage.toFixed(1)}%)`)}`;
   }

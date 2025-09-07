@@ -25,7 +25,8 @@ program
   .option('--sort <by>', 'Sort by: tokens, size, name', 'tokens')
   .option('--depth <n>', 'Maximum tree depth to display', parseInt)
   .option('--min-tokens <n>', 'Hide files with fewer than n tokens', parseInt)
-  .option('--show-percentages', 'Show percentage of parent directory', false)
+  .option('--percentages', 'Show percentage of parent directory', true)
+  .option('--no-percentages', 'Disable percentage display')
   .option('--absolute-percentages', 'Show percentage of total project tokens', false)
   .option('--bars', 'Show visual weight bars', true)
   .option('--no-bars', 'Disable visual weight bars')
@@ -63,14 +64,14 @@ program
           sort: sortBy,
           depth: options.depth,
           minTokens: options.minTokens,
-          showPercentages: options.showPercentages,
-          absolutePercentages: options.absolutePercentages,
+          showPercentages: options.percentages,
+          absolutePercentages: options.absolutePercentages && options.percentages,
           showBars: options.bars, // Use the bars option directly
           colors: !options.noColors // Colors enabled by default unless --no-colors
         };
         
         // Calculate percentages if needed for visualization
-        const shouldCalculatePercentages = treeOptions.showPercentages || treeOptions.absolutePercentages || treeOptions.showBars;
+        const shouldCalculatePercentages = treeOptions.showPercentages || treeOptions.showBars;
         const nodesWithPercentages = shouldCalculatePercentages 
           ? DirectoryScanner.calculatePercentages(result.nodes, treeOptions.absolutePercentages, result.totalTokens)
           : result.nodes;

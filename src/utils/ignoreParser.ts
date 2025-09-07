@@ -3,52 +3,101 @@ import { join, relative, resolve } from 'node:path';
 import { normalizePathSeparators } from './pathUtils.js';
 
 const DEFAULT_IGNORES = [
-  // Version control
-  '.git',
-  '.svn',
-  '.hg',
-  
-  // Dependencies
-  'node_modules',
-  'venv',
-  'env',
+  // Python
+  '*.pyc',
   '__pycache__',
+  '.pytest_cache',
+  '.coverage',
+  '.tox',
+  '.mypy_cache',
+  '.ruff_cache',
+  'poetry.lock',
+  'Pipfile.lock',
   '.Python',
   'pip-wheel-metadata',
   'wheels',
   
-  // Build artifacts
-  'dist',
-  'build',
-  'out',
-  'target',
+  // JavaScript/Node
+  'node_modules',
+  'bower_components',
+  'package-lock.json',
+  'yarn.lock',
+  '.npm',
+  '.pnpm-store',
+  'bun.lockb',
   '.next',
   '.nuxt',
   
-  // IDE and editor files
-  '.vscode',
+  // Java / Rust
+  'target/',
+  '*.class',
+  '*.jar',
+  
+  // Go / .NET / C#
+  'bin/',
+  'pkg/',
+  'obj/',
+  
+  // Version control
+  '.git',
+  '.svn',
+  '.hg',
+  '.gitignore',
+  '.gitattributes',
+  '.gitmodules',
+  
+  // Virtual environments
+  'venv',
+  '.venv',
+  'env',
+  '.env',
+  
+  // IDEs and editors
   '.idea',
-  '*.swp',
+  '.vscode',
   '*.swo',
+  '*.swp',
   '*~',
+  
+  // Build directories and artifacts
+  'build',
+  'dist',
+  'out',
+  '*.egg-info',
+  '*.egg',
+  '*.whl',
+  
+  // OS generated files
   '.DS_Store',
   'Thumbs.db',
-  
-  // Logs and temporary files
-  '*.log',
-  '.tmp',
-  '.temp',
-  '.cache',
-  
-  // OS specific
   'desktop.ini',
   '.directory',
   
-  // Common config/cache directories
-  '.pytest_cache',
-  '.coverage',
+  // Logs and cache
+  '*.log',
+  '.cache',
+  '.eslintcache',
+  '.tmp',
+  '.temp',
   '.nyc_output',
-  '.sass-cache'
+  '.sass-cache',
+  
+  // Common Binary/Media files
+  '*.png',
+  '*.jpg',
+  '*.jpeg',
+  '*.gif',
+  '*.svg',
+  '*.ico',
+  '*.pdf',
+  '*.mp4',
+  '*.mov',
+  '*.db',
+  '*.sqlite',
+  
+  // Minified files
+  '*.min.js',
+  '*.min.css'
 ];
 
 export class IgnoreManager {
