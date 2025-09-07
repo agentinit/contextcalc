@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/agentinit/contextcalc/compare/v1.0.2...v1.0.3) (2025-09-07)
+
+
+### Bug Fixes
+
+* fix depth ([#4](https://github.com/agentinit/contextcalc/issues/4)) ([22c3d3a](https://github.com/agentinit/contextcalc/commit/22c3d3a5da85b958c1a67d8532cbfa93e2fd7138))
+
 ## [1.0.2](https://github.com/agentinit/contextcalc/compare/v1.0.1...v1.0.2) (2025-09-07)
 
 
