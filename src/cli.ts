@@ -7,7 +7,8 @@ import { formatAsTree } from './formatters/treeFormatter.js';
 import { formatAsJson } from './formatters/jsonFormatter.js';
 import { formatAsEnhancedTree } from './formatters/enhancedTreeFormatter.js';
 import { formatAsFlat } from './formatters/flatFormatter.js';
-import { AnalysisMode, OutputFormat, TreeSortBy, TreeOptions, MetricType, MetricSettings } from './types/index.js';
+import { AnalysisMode, OutputFormat, TreeSortBy, MetricType } from './types/index.js';
+import type { TreeOptions, MetricSettings } from './types/index.js';
 import { resolveProjectPath, parseFileSize } from './utils/pathUtils.js';
 
 const program = new Command();

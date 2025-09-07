@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import { Node, ScanResult, TreeOptions, TreeSortBy } from '../types/index.js';
+import { TreeSortBy } from '../types/index.js';
+import type { Node, ScanResult, TreeOptions } from '../types/index.js';
 
 interface TreeContext {
   isLast: boolean[];

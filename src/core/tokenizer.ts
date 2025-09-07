@@ -38,7 +38,7 @@ export class Tokenizer {
 
   countTokensFromText(text: string): number {
     try {
-      const tokens = this.encoding.encode(text, { disallowed_special: new Set() });
+      const tokens = this.encoding.encode(text);
       return tokens.length;
     } catch (error) {
       console.warn(`Warning: Failed to encode text, returning character-based estimate:`, error instanceof Error ? error.message : 'Unknown error');

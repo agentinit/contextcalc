@@ -1,12 +1,12 @@
 import chalk from 'chalk';
-import type { Node, ScanResult } from '../types/index.js';
+import type { Node, ScanResult, TreeOptions } from '../types/index.js';
 
 interface TreeContext {
   isLast: boolean[];
   depth: number;
 }
 
-export function formatAsTree(result: ScanResult): string {
+export function formatAsTree(result: ScanResult, options: TreeOptions): string {
   if (result.nodes.length === 0) {
     return chalk.yellow('No files found matching the criteria.');
   }

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { Node, ScanResult, TreeOptions, FileNode } from '../types/index.js';
+import type { Node, ScanResult, TreeOptions, FileNode } from '../types/index.js';
 
 export function formatAsFlat(result: ScanResult, options: TreeOptions): string {
   if (result.nodes.length === 0) {
@@ -11,8 +11,8 @@ export function formatAsFlat(result: ScanResult, options: TreeOptions): string {
   
   // Filter by minTokens if specified
   let filteredFiles = allFiles;
-  if (options.minTokens) {
-    filteredFiles = allFiles.filter(file => file.tokens >= options.minTokens);
+  if (options.minTokens != null) {
+    filteredFiles = allFiles.filter(file => file.tokens >= options.minTokens!);
   }
   
   // Sort by token count (descending)
