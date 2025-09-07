@@ -3,15 +3,28 @@ import { formatAsEnhancedTree } from '../src/formatters/enhancedTreeFormatter.js
 import type { Node, ScanResult, TreeOptions } from '../src/types/index.js';
 import { AnalysisMode, TreeSortBy, MetricType } from '../src/types/index.js';
 
-// Helper function to create a test node
-function createTestNode(path: string, type: 'file' | 'folder', tokens = 100, children: Node[] = []): Node {
+// Helper function to create a test file node
+function createTestFile(path: string, tokens = 100, lines = 10, filetype = 'js'): Node {
   return {
     path,
     hash: 'test-hash',
     tokens,
     size: 1000,
-    lines: 10,
-    type,
+    lines,
+    type: 'file',
+    filetype,
+    percentage: 10
+  };
+}
+
+// Helper function to create a test folder node
+function createTestFolder(path: string, tokens = 100, children: Node[] = []): Node {
+  return {
+    path,
+    hash: 'test-hash',
+    tokens,
+    size: 1000,
+    type: 'folder',
     children,
     percentage: 10
   };
@@ -41,10 +54,10 @@ function createTreeOptions(depth?: number): TreeOptions {
 }
 
 test('formatAsEnhancedTree with depth 0 shows only root', () => {
-  const root = createTestNode('.', 'folder', 300, [
-    createTestNode('file1.js', 'file', 100),
-    createTestNode('folder1', 'folder', 200, [
-      createTestNode('folder1/file2.js', 'file', 200)
+  const root = createTestFolder('.', 300, [
+    createTestFile('file1.js', 100),
+    createTestFolder('folder1', 200, [
+      createTestFile('folder1/file2.js', 200)
     ])
   ]);
 
@@ -67,12 +80,12 @@ test('formatAsEnhancedTree with depth 0 shows only root', () => {
 });
 
 test('formatAsEnhancedTree with depth 1 shows root plus immediate children', () => {
-  const root = createTestNode('.', 'folder', 600, [
-    createTestNode('file1.js', 'file', 100),
-    createTestNode('folder1', 'folder', 500, [
-      createTestNode('folder1/file2.js', 'file', 200),
-      createTestNode('folder1/nested', 'folder', 300, [
-        createTestNode('folder1/nested/file3.js', 'file', 300)
+  const root = createTestFolder('.', 600, [
+    createTestFile('file1.js', 100),
+    createTestFolder('folder1', 500, [
+      createTestFile('folder1/file2.js', 200),
+      createTestFolder('folder1/nested', 300, [
+        createTestFile('folder1/nested/file3.js', 300)
       ])
     ])
   ]);
@@ -100,12 +113,12 @@ test('formatAsEnhancedTree with depth 1 shows root plus immediate children', () 
 });
 
 test('formatAsEnhancedTree with depth 2 shows root plus two levels of children', () => {
-  const root = createTestNode('.', 'folder', 600, [
-    createTestNode('file1.js', 'file', 100),
-    createTestNode('folder1', 'folder', 500, [
-      createTestNode('folder1/file2.js', 'file', 200),
-      createTestNode('folder1/nested', 'folder', 300, [
-        createTestNode('folder1/nested/file3.js', 'file', 300)
+  const root = createTestFolder('.', 600, [
+    createTestFile('file1.js', 100),
+    createTestFolder('folder1', 500, [
+      createTestFile('folder1/file2.js', 200),
+      createTestFolder('folder1/nested', 300, [
+        createTestFile('folder1/nested/file3.js', 300)
       ])
     ])
   ]);
@@ -133,12 +146,12 @@ test('formatAsEnhancedTree with depth 2 shows root plus two levels of children',
 });
 
 test('formatAsEnhancedTree with unlimited depth shows full tree', () => {
-  const root = createTestNode('.', 'folder', 600, [
-    createTestNode('file1.js', 'file', 100),
-    createTestNode('folder1', 'folder', 500, [
-      createTestNode('folder1/file2.js', 'file', 200),
-      createTestNode('folder1/nested', 'folder', 300, [
-        createTestNode('folder1/nested/file3.js', 'file', 300)
+  const root = createTestFolder('.', 600, [
+    createTestFile('file1.js', 100),
+    createTestFolder('folder1', 500, [
+      createTestFile('folder1/file2.js', 200),
+      createTestFolder('folder1/nested', 300, [
+        createTestFile('folder1/nested/file3.js', 300)
       ])
     ])
   ]);
@@ -178,7 +191,7 @@ test('formatAsEnhancedTree handles empty nodes array', () => {
 });
 
 test('formatAsEnhancedTree handles single file', () => {
-  const file = createTestNode('single.js', 'file', 150);
+  const file = createTestFile('single.js', 150);
 
   const result: ScanResult = {
     nodes: [file],
@@ -198,11 +211,11 @@ test('formatAsEnhancedTree handles single file', () => {
 
 test('formatAsEnhancedTree depth boundary behavior is consistent', () => {
   // Create a deep nested structure to test exact boundaries
-  const root = createTestNode('.', 'folder', 100, [
-    createTestNode('level1', 'folder', 100, [
-      createTestNode('level1/level2', 'folder', 100, [
-        createTestNode('level1/level2/level3', 'folder', 100, [
-          createTestNode('level1/level2/level3/file.js', 'file', 100)
+  const root = createTestFolder('.', 100, [
+    createTestFolder('level1', 100, [
+      createTestFolder('level1/level2', 100, [
+        createTestFolder('level1/level2/level3', 100, [
+          createTestFile('level1/level2/level3/file.js', 100)
         ])
       ])
     ])
