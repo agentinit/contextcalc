@@ -1,0 +1,20 @@
+# 1.0.0 (2025-09-07)
+
+
+### Bug Fixes
+
+* fix tsc ([fed5553](https://github.com/agentinit/contextcalc/commit/fed5553bbe06d56c5cca64a068f225d526d03f2a))
+
+
+### Features
+
+* add debug option ([02bad6b](https://github.com/agentinit/contextcalc/commit/02bad6b0cb1cf51af97a159ff7bb41dd8892a39a))
+* change output styles, change default options ([aac792a](https://github.com/agentinit/contextcalc/commit/aac792a44fcbca466f23256a4593ae1aec702e8c))
+* change output styles, change default options ([4f867bc](https://github.com/agentinit/contextcalc/commit/4f867bce28c9789ef49427d869b0ddeb9dc12bea))
+* choose metrics to display ([29edf36](https://github.com/agentinit/contextcalc/commit/29edf36c188b7fa980916d010782d3f79750c640))
+* cicd ([7f0fb41](https://github.com/agentinit/contextcalc/commit/7f0fb414677d2aeeed15adac2600a2f88722d77a))
+* cicd ([685badb](https://github.com/agentinit/contextcalc/commit/685badbb023e8d314504a900614c3820a958be32))
+* eslint ([deea58b](https://github.com/agentinit/contextcalc/commit/deea58b51b34086b171e8c29a16626161651f28c))
+* initial commit ([a45ba1f](https://github.com/agentinit/contextcalc/commit/a45ba1f756bdc7ecc1df90571031245c0087021e))
+* more ([aff6629](https://github.com/agentinit/contextcalc/commit/aff6629f53b5f7ce3d3ef616aab24973223b7192))
+* more excluded by def files ([9dbe75d](https://github.com/agentinit/contextcalc/commit/9dbe75d1a3c9f6d9039a36d34e018d90ed651877))

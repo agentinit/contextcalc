@@ -18,7 +18,14 @@
     "pack": "bun run build && npm pack --dry-run",
     "prepublishOnly": "bun run build"
   },
-  "keywords": ["cli", "tokens", "llm", "context", "codebase", "analysis"],
+  "keywords": [
+    "cli",
+    "tokens",
+    "llm",
+    "context",
+    "codebase",
+    "analysis"
+  ],
   "author": "Ivan",
   "license": "MIT",
   "dependencies": {
