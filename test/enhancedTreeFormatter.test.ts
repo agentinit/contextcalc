@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { formatAsEnhancedTree } from '../src/formatters/enhancedTreeFormatter.js';
 import type { Node, ScanResult, TreeOptions } from '../src/types/index.js';
-import { AnalysisMode, TreeSortBy, MetricType } from '../src/types/index.js';
+import { AnalysisMode, TreeSortBy } from '../src/types/index.js';
 
 // Helper function to create a test file node
 function createTestFile(path: string, tokens = 100, lines = 10, filetype = 'js'): Node {
