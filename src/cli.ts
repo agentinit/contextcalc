@@ -3,7 +3,6 @@
 import { Command, Option } from 'commander';
 import chalk from 'chalk';
 import { DirectoryScanner } from './core/scanner.js';
-import { formatAsTree } from './formatters/treeFormatter.js';
 import { formatAsJson } from './formatters/jsonFormatter.js';
 import { formatAsEnhancedTree } from './formatters/enhancedTreeFormatter.js';
 import { formatAsFlat } from './formatters/flatFormatter.js';

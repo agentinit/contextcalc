@@ -1,4 +1,4 @@
-import { resolve, join, relative, dirname } from 'node:path';
+import { resolve, join, relative } from 'node:path';
 import { homedir } from 'node:os';
 
 export function getCacheDir(): string {
