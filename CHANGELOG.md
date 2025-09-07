@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/agentinit/contextcalc/compare/v1.0.0...v1.0.1) (2025-09-07)
+
+
+### Bug Fixes
+
+* build with .wasm fix ([4df96d0](https://github.com/agentinit/contextcalc/commit/4df96d01ae7590c4c9b9f80fb5fe29f8a7b4472e))
+
 # 1.0.0 (2025-09-07)
 
 
