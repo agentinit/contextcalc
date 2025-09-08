@@ -1,6 +1,6 @@
-# contextcalc
+# ContextCalc
 
-A fast CLI tool for analyzing codebase structure and token counts for LLM context management.
+Tree like CLI tool for analyzing codebase structure and token counts for LLM context management.
 
 ## Installation
 
@@ -42,19 +42,6 @@ Cache: 20 hits, 0 misses (100.0% hit rate)
 Completed in 0.18s
 ```
 
-### Enhanced Tree View
-Add visual bars for extra clarity:
-```bash
-npx contextcalc . --bars --depth 2
-```
-```
-[██████████] . (11.8k tokens, 42.5KB) (100.0%)
-├── [████████░░] src (9.0k tokens, 35.1KB) (76.3%)
-├── [█░░░░░░░░░] bun.lock (1.4k tokens, 2.6KB) (11.9%)
-├── [█░░░░░░░░░] test (812 tokens, 3.0KB) (6.9%)
-└── [░░░░░░░░░░] package.json (313 tokens, 924B) (2.7%)
-```
-
 ### Flat View
 Lists all files sorted by token count (perfect for finding large files):
 ```bash
@@ -63,7 +50,6 @@ npx contextcalc . --output flat --min-tokens 500
 ```
 src/formatters/enhancedTreeFormatter.ts 1.8k tokens, 226 lines, 6.5KB (13.1%)
 src/core/scanner.ts 1.5k tokens, 226 lines, 6.7KB (11.5%)
-bun.lock 1.4k tokens, 48 lines, 2.6KB (10.1%)
 src/cli.ts 1.2k tokens, 131 lines, 5.3KB (9.3%)
 src/utils/fileDetector.ts 922 tokens, 123 lines, 3.0KB (6.7%)
 ```

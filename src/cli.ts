@@ -47,7 +47,9 @@ program
       const metrics = parseMetrics(options.metrics);
       const isDebug = process.env.DEBUG === '1' || process.env.DEBUG?.toLowerCase() === 'true';
       
-      console.log(chalk.dim(`Analyzing ${projectPath} in ${mode} mode...`));
+      if (isDebug) {
+        console.log(chalk.dim(`Analyzing ${projectPath} in ${mode} mode...`));
+      }
       
       const scanner = new DirectoryScanner(projectPath, mode, maxFileSize);
       await scanner.initialize(options.gitignore, options.defaultIgnores);
