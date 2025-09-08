@@ -1,6 +1,14 @@
-# ContextCalc
+# ContextCalc 📏
 
-Tree like CLI tool for analyzing codebase structure and token counts for LLM context management.
+#### `tree` like CLI tool but with token counts.
+
+![GitHub License](https://img.shields.io/github/license/agentinit/contextcalc)
+![NPM Unpacked Size](https://img.shields.io/npm/unpacked-size/contextcalc)
+![NPM Version](https://img.shields.io/npm/v/contextcalc)
+![NPM Downloads](https://img.shields.io/npm/dm/contextcalc)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/agentinit/contextcalc/release.yml?logo=github)
+
+
 
 https://github.com/user-attachments/assets/3c9556b3-3876-46f7-9a44-707dd8c85000
 
@@ -16,13 +24,16 @@ npx contextcalc [path] [options]
 ## Quick Start
 
 ```bash
-# Clean tree view with absolute percentages (default)
+# Tree view
 npx contextcalc .
 
 # Flat file list sorted by token count  
 npx contextcalc . --output flat
 
-# Enhanced view with visual bars
+# Flat file list sorted by token count (only .txt, .md and etc.)
+npx contextcalc . --mode docs
+
+# Tree with visual bars
 npx contextcalc . --bars
 ```
 
@@ -77,7 +88,7 @@ npx contextcalc . --output json
 | `--sort <by>` | Sort by: `tokens`, `size`, `name` | `tokens` |
 | `--mode <mode>` | Files to analyze: `all`, `code`, `docs` | `all` |
 
-## Usage Examples
+## More examples
 
 ```bash
 # Find largest files in project
