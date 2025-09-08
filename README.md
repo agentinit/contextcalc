@@ -2,6 +2,9 @@
 
 Tree like CLI tool for analyzing codebase structure and token counts for LLM context management.
 
+https://github.com/user-attachments/assets/3c9556b3-3876-46f7-9a44-707dd8c85000
+
+
 ## Installation
 
 ```bash
