@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/agentinit/contextcalc/compare/v1.0.3...v1.0.4) (2025-09-08)
+
+
+### Bug Fixes
+
+* upd readme, upd cli.ts to be less wordy ([cdcc460](https://github.com/agentinit/contextcalc/commit/cdcc46041afac40ff5b77f28fd9d5452fa3096d6))
+
 ## [1.0.3](https://github.com/agentinit/contextcalc/compare/v1.0.2...v1.0.3) (2025-09-07)
 
 
