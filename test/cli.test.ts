@@ -3,11 +3,11 @@ import { spawn } from 'bun';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const CLI_PATH = path.join(__dirname, '../dist/cli.js');
+const CLI_PATH = path.join(__dirname, '../src/cli.ts');
 
 // Helper to run CLI with input and capture output
 async function runCLI(args: string[] = [], stdin?: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
-  const proc = spawn(['node', CLI_PATH, ...args], {
+  const proc = spawn(['bun', CLI_PATH, ...args], {
     stdin: stdin ? 'pipe' : undefined,
     stdout: 'pipe',
     stderr: 'pipe',

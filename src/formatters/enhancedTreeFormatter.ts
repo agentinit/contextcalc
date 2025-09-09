@@ -11,7 +11,7 @@ interface TreeContext {
 
 export function formatAsEnhancedTree(result: ScanResult, options: TreeOptions): string {
   if (result.nodes.length === 0) {
-    return chalk.yellow('No files found matching the criteria.');
+    return options.colors ? chalk.yellow('No files found matching the criteria.') : 'No files found matching the criteria.';
   }
 
   const lines: string[] = [];
