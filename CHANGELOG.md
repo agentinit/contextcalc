@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/agentinit/contextcalc/compare/v1.0.5...v1.1.0) (2025-09-09)
+
+
+### Features
+
+* add multiple input sources (stdin, clipboard, single file) ([#8](https://github.com/agentinit/contextcalc/issues/8)) ([a3d85eb](https://github.com/agentinit/contextcalc/commit/a3d85ebba8e73b8c51bad8aec47df0426c2243c8))
+
 ## [1.0.5](https://github.com/agentinit/contextcalc/compare/v1.0.4...v1.0.5) (2025-09-08)
 
 
