@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { TreeSortBy } from '../types/index.js';
 import type { Node, ScanResult, TreeOptions } from '../types/index.js';
+import { formatFileSize } from '../utils/formatUtils.js';
 
 interface TreeContext {
   isLast: boolean[];
@@ -210,20 +211,6 @@ function formatTokenCount(count: number, useColors: boolean): string {
   }
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0B';
-  
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const k = 1024;
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  if (i === 0) {
-    return `${bytes}B`;
-  }
-  
-  const size = (bytes / Math.pow(k, i)).toFixed(1);
-  return `${size}${units[i]}`;
-}
 
 function buildFileInfo(tokenCount: string, lines: number, fileSize: string, options: TreeOptions): string {
   const parts = [];
