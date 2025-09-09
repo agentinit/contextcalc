@@ -37,6 +37,42 @@ npx contextcalc . --mode docs
 npx contextcalc . --bars
 ```
 
+## Input Sources
+
+ContextCalc supports multiple input sources for maximum flexibility:
+
+### Directory Analysis (default)
+Analyze entire directories with hierarchical structure:
+```bash
+npx contextcalc ./src --depth 2
+npx contextcalc . --output flat --min-tokens 1000
+```
+
+### Single File Analysis  
+Analyze individual files directly:
+```bash
+npx contextcalc README.md
+npx contextcalc src/cli.ts --metrics tokens
+npx contextcalc package.json --metrics lines,size --no-colors
+```
+
+### Stdin Pipe
+Pipe content from other commands or files:
+```bash
+cat README.md | npx contextcalc
+echo "Your text here" | npx contextcalc --metrics tokens,lines
+git diff | npx contextcalc --metrics tokens --no-colors
+```
+
+### Clipboard Content
+Analyze content directly from your clipboard:
+```bash
+# Copy some text, then analyze it:
+npx contextcalc --from-clipboard
+npx contextcalc --from-clipboard --metrics tokens
+npx contextcalc --from-clipboard --metrics size --no-colors
+```
+
 ## Output Formats
 
 ### Tree View (default)
@@ -111,6 +147,20 @@ npx contextcalc ./docs --mode docs
 
 # Export data for analysis
 npx contextcalc . -o json > analysis.json
+
+# Single file with specific metrics
+npx contextcalc package.json --metrics lines,size
+
+# Clipboard analysis with custom metrics
+npx contextcalc --from-clipboard --metrics tokens
+
+# Stdin with custom formatting  
+cat large-file.txt | npx contextcalc --metrics tokens,lines --no-colors
+
+# Compare different input sources
+npx contextcalc README.md --metrics tokens
+cat README.md | npx contextcalc --metrics tokens
+# Both should show the same token count!
 ```
 
 ## Why contextcalc?

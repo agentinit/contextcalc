@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import type { Node, ScanResult, TreeOptions, FileNode } from '../types/index.js';
+import { formatFileSize } from '../utils/formatUtils.js';
 
 export function formatAsFlat(result: ScanResult, options: TreeOptions): string {
   if (result.nodes.length === 0) {
@@ -140,20 +141,6 @@ function formatTokenCount(count: number, useColors: boolean): string {
   }
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0B';
-  
-  const units = ['B', 'KB', 'MB', 'GB'];
-  const k = 1024;
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  if (i === 0) {
-    return `${bytes}B`;
-  }
-  
-  const size = (bytes / Math.pow(k, i)).toFixed(1);
-  return `${size}${units[i]}`;
-}
 
 function buildFileInfo(tokenCount: string, lines: number, fileSize: string, options: TreeOptions): string {
   const parts = [];
