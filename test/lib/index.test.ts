@@ -12,7 +12,8 @@ import {
   dispose,
   getTokenizerInfo,
   version,
-  type TokenCountOptions
+  type TokenCountOptions,
+  type TokenInput
 } from '../../src/lib/index.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
