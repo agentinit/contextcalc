@@ -162,11 +162,25 @@ Structured data for scripts and automation:
 npx contextcalc . --output json
 ```
 
+### CSV Output
+Export data in comma-separated values format for spreadsheets and data analysis:
+```bash
+npx contextcalc . --output csv
+```
+```
+Path,Tokens,Lines,Size(bytes),Type,Percentage
+src/cli.ts,2834,339,12504,ts,12.1
+src/formatters/enhancedTreeFormatter.ts,1847,226,6498,ts,7.9
+src/core/scanner.ts,1544,226,6706,ts,6.6
+README.md,2208,283,7806,md,9.4
+"Total",23421,1247,87604,"",100.0
+```
+
 ## Options Reference
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `-o, --output <format>` | Output format: `tree`, `flat`, `json` | `tree` |
+| `-o, --output <format>` | Output format: `tree`, `flat`, `json`, `csv` | `tree` |
 | `--mode <mode>` | Files to analyze: `all`, `code`, `docs` | `all` |
 | `--max-size <size>` | Maximum file size to analyze (e.g., 10M, 500k) | `10M` |
 | `--sort <by>` | Sort by: `tokens`, `size`, `name` | `tokens` |
@@ -258,6 +272,7 @@ npx contextcalc . --output flat --min-tokens 1000
 
 # Export analysis data for further processing
 npx contextcalc . --output json > analysis.json
+npx contextcalc . --output csv > analysis.csv
 
 # Quick overview of just top-level directories
 npx contextcalc . --depth 1
@@ -302,7 +317,7 @@ find . -name "*.md" -exec cat {} \; | npx contextcalc --metrics tokens,lines
 
 # Generate reports for different file types
 npx contextcalc . --mode code --output json > code-analysis.json
-npx contextcalc . --mode docs --output json > docs-analysis.json
+npx contextcalc . --mode docs --output csv > docs-analysis.csv
 
 # Clean analysis for CI/CD pipelines
 npx contextcalc . --output flat --no-colors --min-tokens 500 | head -10
