@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/agentinit/contextcalc/compare/v1.2.0...v1.3.0) (2025-09-10)
+
+
+### Features
+
+* add csv output ([#10](https://github.com/agentinit/contextcalc/issues/10)) ([e1d182b](https://github.com/agentinit/contextcalc/commit/e1d182b8f2f8fcc480e576b8f7d27604cd9357e0))
+
 # [1.2.0](https://github.com/agentinit/contextcalc/compare/v1.1.0...v1.2.0) (2025-09-10)
 
 
