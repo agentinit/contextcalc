@@ -8,6 +8,9 @@
 ![NPM Downloads](https://img.shields.io/npm/dm/contextcalc)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/agentinit/contextcalc/release.yml?logo=github)
 
+
+![Image](https://github.com/user-attachments/assets/8dd2e4a6-4f0a-48ed-bf4c-7cf26cc38db8)
+
 https://github.com/user-attachments/assets/3c9556b3-3876-46f7-9a44-707dd8c85000
 
 ## Table of Contents
