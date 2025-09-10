@@ -19,9 +19,25 @@ export function formatAsCsv(result: ScanResult, options: TreeOptions): string {
     filteredFiles = allFiles.filter(file => file.tokens >= options.minTokens!);
   }
   
-  // Sort by token count (descending)
-  filteredFiles.sort((a, b) => b.tokens - a.tokens);
+// At the top of src/formatters/csvFormatter.ts:
+import type { Node, ScanResult, TreeOptions, FileNode } from '../types/index.js';
+import { TreeSortBy } from '../types/index.js';
 
+// …later, where files are filtered and sorted…
+
+// Sort according to CLI option
+switch (options.sort) {
+  case TreeSortBy.SIZE:
+    filteredFiles.sort((a, b) => b.size - a.size);
+    break;
+  case TreeSortBy.NAME:
+    filteredFiles.sort((a, b) => a.path.localeCompare(b.path));
+    break;
+  case TreeSortBy.TOKENS:
+  default:
+    filteredFiles.sort((a, b) => b.tokens - a.tokens);
+    break;
+}
   // Add each file as a CSV row
   for (const file of filteredFiles) {
     lines.push(formatFileAsCsvRow(file));
