@@ -1,6 +1,6 @@
 # ContextCalc 📏
 
-#### `tree` like CLI tool but with token counts.
+#### `tree` like CLI tool and library for token counting.
 
 ![GitHub License](https://img.shields.io/github/license/agentinit/contextcalc)
 ![NPM Unpacked Size](https://img.shields.io/npm/unpacked-size/contextcalc)
@@ -34,6 +34,12 @@ https://github.com/user-attachments/assets/3c9556b3-3876-46f7-9a44-707dd8c85000
     - [Performance \& Analysis](#performance--analysis)
     - [Input Source Comparison](#input-source-comparison)
     - [Advanced Workflows](#advanced-workflows)
+  - [Library Usage](#library-usage)
+    - [Installation as Library](#installation-as-library)
+    - [Basic API](#basic-api)
+    - [Common Use Cases](#common-use-cases)
+    - [Function Reference](#function-reference)
+    - [TypeScript Support](#typescript-support)
   - [License](#license)
 
 ## Installation
@@ -297,6 +303,93 @@ npx contextcalc . --mode docs --output json > docs-analysis.json
 
 # Clean analysis for CI/CD pipelines
 npx contextcalc . --output flat --no-colors --min-tokens 500 | head -10
+```
+
+## Library Usage
+
+ContextCalc can be imported and used as a library in your Node.js applications for programmatic token counting.
+
+### Installation as Library
+
+```bash
+npm install contextcalc
+# or
+yarn add contextcalc
+# or
+bun add contextcalc
+```
+
+> 📖 **Complete API Reference**: See [DOCS.md](./DOCS.md) for detailed documentation, advanced examples, and integration guides.
+
+### Basic API
+
+```javascript
+import { countTokens, countTokensWithOptions } from 'contextcalc';
+
+// Simple token counting
+const tokens = countTokens("Hello, world!");
+console.log(tokens); // 4
+
+// Works with any data type
+const jsonTokens = countTokens({ message: "Hello", data: [1, 2, 3] });
+console.log(jsonTokens); // 24
+
+const bufferTokens = countTokens(Buffer.from("Hello"));
+console.log(bufferTokens); // 2
+
+// Advanced options
+const result = countTokensWithOptions("Line 1\nLine 2", {
+  includeLines: true,
+  format: 'formatted'
+});
+console.log(result); // { tokens: 6, lines: 2, formatted: "6" }
+```
+
+### Common Use Cases
+
+```javascript
+import { 
+  countTokens,
+  countTokensBatch,
+  countTokensFromFile,
+  estimateTokens
+} from 'contextcalc';
+
+// Batch processing multiple inputs
+const inputs = ["Hello", "World", { key: "value" }];
+const results = countTokensBatch(inputs);
+console.log(results); // [2, 1, 8]
+
+// File processing
+const fileTokens = await countTokensFromFile('./README.md');
+console.log(fileTokens); // 1247
+
+// Quick estimation for large datasets
+const estimate = estimateTokens("Large text content...");
+console.log(estimate); // Fast approximate count
+```
+
+### Function Reference
+
+| Function | Purpose | Example |
+|----------|---------|---------|
+| `countTokens(input)` | Basic token counting | `countTokens("Hello")` → `2` |
+| `countTokensBatch(inputs)` | Multiple inputs efficiently | `countTokensBatch(["a", "b"])` → `[1, 1]` |
+| `countTokensFromFile(path)` | File processing | `await countTokensFromFile("file.txt")` |
+| `estimateTokens(input)` | Quick estimation | `estimateTokens("text")` → `1` |
+| `countWithLines(input)` | Include line count | `countWithLines("Hi\nBye")` → `{tokens: 3, lines: 2}` |
+
+### TypeScript Support
+
+```typescript
+import { 
+  countTokens,
+  type TokenInput,
+  type TokenCountResult 
+} from 'contextcalc';
+
+const input: TokenInput = "Hello, TypeScript!";
+const tokens: number = countTokens(input);
 ```
 
 ## License
