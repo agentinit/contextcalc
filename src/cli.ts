@@ -6,8 +6,9 @@ import { DirectoryScanner } from './core/scanner.js';
 import { formatAsJson } from './formatters/jsonFormatter.js';
 import { formatAsEnhancedTree } from './formatters/enhancedTreeFormatter.js';
 import { formatAsFlat } from './formatters/flatFormatter.js';
+import { formatAsCsv } from './formatters/csvFormatter.js';
 import { AnalysisMode, OutputFormat, TreeSortBy, MetricType } from './types/index.js';
-import type { TreeOptions, MetricSettings } from './types/index.js';
+import type { TreeOptions, MetricSettings, Node, ScanResult } from './types/index.js';
 import { resolveProjectPath, parseFileSize } from './utils/pathUtils.js';
 import { formatFileSize } from './utils/formatUtils.js';
 import { Tokenizer } from './core/tokenizer.js';
@@ -103,7 +104,7 @@ program
   .argument('[path]', 'Path to analyze', '.')
   .option('--mode <mode>', 'Analysis mode: all, code, docs', 'all')
   .option('--max-size <size>', 'Maximum file size to analyze (e.g., 10M, 500k)', '10M')
-  .option('-o, --output <format>', 'Output format: tree, json, flat', 'tree')
+  .option('-o, --output <format>', 'Output format: tree, json, flat, csv', 'tree')
   .option('--sort <by>', 'Sort by: tokens, size, name', 'tokens')
   .option('--depth <n>', 'Tree depth levels to display (0=root only, 1=root+children, etc.)', parseInt)
   .option('--min-tokens <n>', 'Hide files with fewer than n tokens', parseInt)
@@ -155,6 +156,12 @@ program
         }
       }
       
+      // Parse and validate options early 
+      const mode = validateMode(options.mode);
+      const outputFormat = validateOutputFormat(options.output);
+      const sortBy = validateSortBy(options.sort);
+      const isDebug = process.env.DEBUG === '1' || process.env.DEBUG?.toLowerCase() === 'true';
+      
       // Check if input is being piped from stdin
       if (!process.stdin.isTTY) {
         const content = await readStdin();
@@ -167,12 +174,52 @@ program
           const lines = tokenizer.countLines(content);
           const bytes = Buffer.byteLength(content, 'utf8');
           
-          // Format output using metrics settings
-          const metricInfo = buildMetricInfo(tokens, lines, bytes, tokenizer, metrics, !options.noColors);
-          if (!options.noColors) {
-            console.log(chalk.blue(`stdin`) + ' ' + metricInfo);
+          // Create a fake result for stdin content to use with formatters
+          const stdinNode: Node = {
+            path: 'stdin',
+            hash: 'stdin-hash',
+            tokens,
+            lines,
+            size: bytes,
+            type: 'file',
+            filetype: '',
+            percentage: 100.0
+          };
+
+          const stdinResult: ScanResult = {
+            nodes: [stdinNode],
+            totalTokens: tokens,
+            totalFiles: 1,
+            cacheHits: 0,
+            cacheMisses: 0
+          };
+
+          if (outputFormat === OutputFormat.JSON) {
+            console.log(formatAsJson(stdinResult));
+          } else if (outputFormat === OutputFormat.CSV) {
+            const treeOptions: TreeOptions = {
+              mode,
+              maxSize: options.maxSize,
+              gitignore: options.gitignore,
+              defaultIgnores: options.defaultIgnores,
+              sort: sortBy,
+              depth: options.depth,
+              minTokens: options.minTokens,
+              metrics: { showTokens: true, showLines: true, showSize: true, showPercentages: true },
+              absolutePercentages: !options.relativePercentages,
+              showBars: false,
+              colors: false,
+              debug: isDebug
+            };
+            console.log(formatAsCsv(stdinResult, treeOptions));
           } else {
-            console.log(`stdin ${metricInfo}`);
+            // For tree and flat formats, use the existing simple output for stdin
+            const metricInfo = buildMetricInfo(tokens, lines, bytes, tokenizer, metrics, !options.noColors);
+            if (!options.noColors) {
+              console.log(chalk.blue(`stdin`) + ' ' + metricInfo);
+            } else {
+              console.log(`stdin ${metricInfo}`);
+            }
           }
           
           tokenizer.dispose();
@@ -219,11 +266,7 @@ program
         }
       }
       
-      const mode = validateMode(options.mode);
-      const outputFormat = validateOutputFormat(options.output);
-      const sortBy = validateSortBy(options.sort);
       const maxFileSize = parseFileSize(options.maxSize);
-      const isDebug = process.env.DEBUG === '1' || process.env.DEBUG?.toLowerCase() === 'true';
       
       if (isDebug) {
         console.log(chalk.dim(`Analyzing ${projectPath} in ${mode} mode...`));
@@ -237,6 +280,31 @@ program
       
       if (outputFormat === OutputFormat.JSON) {
         console.log(formatAsJson(result));
+      } else if (outputFormat === OutputFormat.CSV) {
+        // CSV format needs tree options for filtering and sorting
+        const treeOptions: TreeOptions = {
+          mode,
+          maxSize: options.maxSize,
+          gitignore: options.gitignore,
+          defaultIgnores: options.defaultIgnores,
+          sort: sortBy,
+          depth: options.depth,
+          minTokens: options.minTokens,
+          metrics: { showTokens: true, showLines: true, showSize: true, showPercentages: true },
+          absolutePercentages: !options.relativePercentages,
+          showBars: false,
+          colors: false, // CSV doesn't use colors
+          debug: isDebug
+        };
+        
+        // Calculate percentages for CSV
+        const nodesWithPercentages = DirectoryScanner.calculatePercentages(result.nodes, treeOptions.absolutePercentages, result.totalTokens);
+        const enhancedResult = {
+          ...result,
+          nodes: nodesWithPercentages
+        };
+        
+        console.log(formatAsCsv(enhancedResult, treeOptions));
       } else if (outputFormat === OutputFormat.TREE || outputFormat === OutputFormat.FLAT) {
         // Tree and flat formats need tree options and percentage calculations
         // Handle backward compatibility for percentage options
