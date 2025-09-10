@@ -46,7 +46,8 @@ switch (options.sort) {
   // Add summary row
   const totalSize = filteredFiles.reduce((sum, file) => sum + file.size, 0);
   const totalLines = filteredFiles.reduce((sum, file) => sum + file.lines, 0);
-  const summaryRow = `"Total",${result.totalTokens},${totalLines},${totalSize},"",100.0`;
+  const totalTokens = filteredFiles.reduce((sum, file) => sum + file.tokens, 0);
+  const summaryRow = `"Total",${totalTokens},${totalLines},${totalSize},"",100.0`;
   lines.push(summaryRow);
 
   return lines.join('\n');
