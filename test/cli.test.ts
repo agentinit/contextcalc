@@ -11,6 +11,7 @@ async function runCLI(args: string[] = [], stdin?: string): Promise<{ stdout: st
     stdin: stdin ? 'pipe' : undefined,
     stdout: 'pipe',
     stderr: 'pipe',
+    cwd: path.join(__dirname, '..'), // Set working directory to project root
   });
 
   if (stdin && proc.stdin) {
