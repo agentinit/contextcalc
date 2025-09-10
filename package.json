@@ -24,6 +24,7 @@
     "dev": "bun run src/cli.ts",
     "dev:lib": "bun run src/lib/index.ts",
     "test": "bun test",
+    "test_all": "bun test && bun run tsc && bun run lint",
     "typecheck": "bun run tsc --noEmit",
     "lint": "eslint src/ test/",
     "lint:fix": "eslint src/ test/ --fix",

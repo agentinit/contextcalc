@@ -42,7 +42,8 @@ export enum AnalysisMode {
 export enum OutputFormat {
   TREE = 'tree',
   JSON = 'json',
-  FLAT = 'flat'
+  FLAT = 'flat',
+  CSV = 'csv'
 }
 
 export enum TreeSortBy {
