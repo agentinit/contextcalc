@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/agentinit/contextcalc/compare/v1.1.0...v1.2.0) (2025-09-10)
+
+
+### Features
+
+* add js api ([a67be7e](https://github.com/agentinit/contextcalc/commit/a67be7ec0b718d73150426eb046e541ceb499980))
+
 # [1.1.0](https://github.com/agentinit/contextcalc/compare/v1.0.5...v1.1.0) (2025-09-09)
 
 
