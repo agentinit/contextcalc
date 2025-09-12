@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/agentinit/contextcalc/compare/v1.3.0...v1.3.1) (2025-09-12)
+
+
+### Bug Fixes
+
+* fix formatting in tree mode ([#11](https://github.com/agentinit/contextcalc/issues/11)) ([b785d1d](https://github.com/agentinit/contextcalc/commit/b785d1daa16bc2430431d778dada0d3080af2830))
+
 # [1.3.0](https://github.com/agentinit/contextcalc/compare/v1.2.0...v1.3.0) (2025-09-10)
 
 
