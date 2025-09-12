@@ -44,6 +44,10 @@
   ],
   "author": "Ivan",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentinit/contextcalc.git"
+  },
   "dependencies": {
     "commander": "^12.1.0",
     "tiktoken": "^1.0.17",
