@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { basename } from 'node:path';
 import { TreeSortBy } from '../types/index.js';
 import type { Node, ScanResult, TreeOptions } from '../types/index.js';
 import { formatFileSize } from '../utils/formatUtils.js';
@@ -75,11 +76,11 @@ function formatEnhancedNode(node: Node, context: TreeContext, options: TreeOptio
   }
   
   if (node.type === 'file') {
-    const fileName = options.colors ? chalk.cyan(node.path) : node.path;
+    const fileName = options.colors ? chalk.cyan(basename(node.path)) : basename(node.path);
     const info = buildFileInfo(tokenCount, node.lines, fileSize, options);
     lines.push(`${prefix}${weightBar}${fileName} ${info}${percentageText}`);
   } else {
-    const folderName = options.colors ? chalk.blue.bold(node.path) : node.path;
+    const folderName = options.colors ? chalk.blue.bold(basename(node.path)) : basename(node.path);
     const info = buildFolderInfo(tokenCount, fileSize, options);
     lines.push(`${prefix}${weightBar}${folderName} ${info}${percentageText}`);
     

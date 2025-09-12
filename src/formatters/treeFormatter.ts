@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { basename } from 'node:path';
 import type { Node, ScanResult, TreeOptions } from '../types/index.js';
 
 interface TreeContext {
@@ -41,11 +42,11 @@ function formatNode(node: Node, context: TreeContext): string[] {
   const tokenCount = formatTokenCount(node.tokens);
   
   if (node.type === 'file') {
-    const fileName = chalk.cyan(node.path);
+    const fileName = chalk.cyan(basename(node.path));
     const info = chalk.dim(`(${tokenCount} tokens, ${node.lines} lines)`);
     lines.push(`${prefix}${fileName} ${info}`);
   } else {
-    const folderName = chalk.blue.bold(node.path);
+    const folderName = chalk.blue.bold(basename(node.path));
     const info = chalk.dim(`(${tokenCount} tokens)`);
     lines.push(`${prefix}${folderName} ${info}`);
     

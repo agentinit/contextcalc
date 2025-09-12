@@ -109,7 +109,7 @@ test('formatAsEnhancedTree with depth 1 shows root plus immediate children', () 
   // Should not show nested children
   expect(output).not.toContain('folder1/file2.js');
   expect(output).not.toContain('folder1/nested');
-  expect(output).not.toContain('folder1/nested/file3.js');
+  expect(output).not.toContain('file3.js');
 });
 
 test('formatAsEnhancedTree with depth 2 shows root plus two levels of children', () => {
@@ -139,10 +139,10 @@ test('formatAsEnhancedTree with depth 2 shows root plus two levels of children',
   expect(output).toContain('. (600 tokens, 1000B) (10.0%)');
   expect(output).toContain('file1.js');
   expect(output).toContain('folder1');
-  expect(output).toContain('folder1/file2.js');
-  expect(output).toContain('folder1/nested');
+  expect(output).toContain('file2.js');
+  expect(output).toContain('nested');
   // Should not show third level
-  expect(output).not.toContain('folder1/nested/file3.js');
+  expect(output).not.toContain('file3.js');
 });
 
 test('formatAsEnhancedTree with unlimited depth shows full tree', () => {
@@ -172,9 +172,9 @@ test('formatAsEnhancedTree with unlimited depth shows full tree', () => {
   expect(output).toContain('. (600 tokens, 1000B) (10.0%)');
   expect(output).toContain('file1.js');
   expect(output).toContain('folder1');
-  expect(output).toContain('folder1/file2.js');
-  expect(output).toContain('folder1/nested');
-  expect(output).toContain('folder1/nested/file3.js');
+  expect(output).toContain('file2.js');
+  expect(output).toContain('nested');
+  expect(output).toContain('file3.js');
 });
 
 test('formatAsEnhancedTree handles empty nodes array', () => {
@@ -231,10 +231,10 @@ test('formatAsEnhancedTree depth boundary behavior is consistent', () => {
 
   // Test that depth n includes exactly n+1 levels (0-indexed)
   const depth3Output = formatAsEnhancedTree(result, createTreeOptions(3));
-  expect(depth3Output).toContain('level1/level2/level3');
-  expect(depth3Output).not.toContain('level1/level2/level3/file.js');
+  expect(depth3Output).toContain('level3');
+  expect(depth3Output).not.toContain('file.js');
 
   const depth4Output = formatAsEnhancedTree(result, createTreeOptions(4));
-  expect(depth4Output).toContain('level1/level2/level3');
-  expect(depth4Output).toContain('level1/level2/level3/file.js');
+  expect(depth4Output).toContain('level3');
+  expect(depth4Output).toContain('file.js');
 });
