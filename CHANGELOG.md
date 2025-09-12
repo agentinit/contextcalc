@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/agentinit/contextcalc/compare/v1.3.1...v1.3.2) (2025-09-12)
+
+
+### Bug Fixes
+
+* update package.json ([37e3926](https://github.com/agentinit/contextcalc/commit/37e392682d8eb9311eb1028a3a090100744d717c))
+
 ## [1.3.1](https://github.com/agentinit/contextcalc/compare/v1.3.0...v1.3.1) (2025-09-12)
 
 
