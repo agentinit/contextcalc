@@ -5,7 +5,7 @@
 ![GitHub License](https://img.shields.io/github/license/agentinit/contextcalc)
 ![NPM Unpacked Size](https://img.shields.io/npm/unpacked-size/contextcalc)
 ![NPM Version](https://img.shields.io/npm/v/contextcalc)
-![NPM Downloads](https://img.shields.io/npm/dm/contextcalc)
+![NPM Downloads](https://img.shields.io/npm/d18m/contextcalc)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/agentinit/contextcalc/release.yml?logo=github)
 
 
