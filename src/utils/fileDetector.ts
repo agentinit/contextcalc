@@ -48,7 +48,7 @@ const CODE_EXTENSIONS = new Set([
 ]);
 
 const DOCS_EXTENSIONS = new Set([
-  '.md', '.markdown', '.mdx',
+  '.md', '.markdown', '.mdx', '.mdc',
   '.txt', '.text',
   '.rst', '.adoc', '.asciidoc',
   '.tex', '.latex',
