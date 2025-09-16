@@ -13,6 +13,7 @@ test('isCodeFile identifies code files correctly', () => {
 test('isDocumentationFile identifies documentation files correctly', () => {
   expect(isDocumentationFile('README.md')).toBe(true);
   expect(isDocumentationFile('docs.txt')).toBe(true);
+  expect(isDocumentationFile('.cursorrules.mdc')).toBe(true);
   expect(isDocumentationFile('test.js')).toBe(false);
 });
 
