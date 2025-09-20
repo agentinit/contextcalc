@@ -12,6 +12,7 @@ import type { TreeOptions, MetricSettings, Node, ScanResult } from './types/inde
 import { resolveProjectPath, parseFileSize } from './utils/pathUtils.js';
 import { formatFileSize } from './utils/formatUtils.js';
 import { Tokenizer } from './core/tokenizer.js';
+import packageJson from '../package.json' assert { type: 'json' };
 
 const program = new Command();
 
@@ -97,7 +98,7 @@ async function readClipboard(): Promise<string> {
 program
   .name('contextcalc')
   .description('A fast CLI tool for analyzing codebase structure and token counts for LLM context management')
-  .version('1.0.0');
+  .version(packageJson.version);
 
 // Main command with enhanced tree features
 program
