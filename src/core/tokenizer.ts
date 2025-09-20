@@ -1,16 +1,18 @@
-import { get_encoding } from 'tiktoken';
 import { isBinaryFile, estimateBinaryTokens } from '../utils/fileDetector.js';
-
-const ENCODING_NAME = 'o200k_base';
+import { getTiktoken, getTiktokenError } from '../utils/tiktokenInit.js';
 
 export class Tokenizer {
-  private encoding;
+  private tiktokenWrapper;
 
   constructor() {
-    try {
-      this.encoding = get_encoding(ENCODING_NAME);
-    } catch (error) {
-      throw new Error(`Failed to initialize tokenizer with encoding '${ENCODING_NAME}': ${error instanceof Error ? error.message : 'Unknown error'}`);
+    this.tiktokenWrapper = getTiktoken();
+    
+    if (!this.tiktokenWrapper.isInitialized) {
+      const error = getTiktokenError();
+      if (error) {
+        throw error;
+      }
+      throw new Error('Failed to initialize tokenizer: Unknown error');
     }
   }
 
@@ -38,7 +40,12 @@ export class Tokenizer {
 
   countTokensFromText(text: string): number {
     try {
-      const tokens = this.encoding.encode(text);
+      if (!this.tiktokenWrapper.isInitialized) {
+        console.warn('Warning: Tiktoken not initialized, using character-based estimate');
+        return Math.ceil(text.length / 4);
+      }
+      
+      const tokens = this.tiktokenWrapper.encoding.encode(text);
       return tokens.length;
     } catch (error) {
       console.warn(`Warning: Failed to encode text, returning character-based estimate:`, error instanceof Error ? error.message : 'Unknown error');
@@ -55,7 +62,9 @@ export class Tokenizer {
 
   dispose(): void {
     try {
-      this.encoding.free();
+      if (this.tiktokenWrapper.isInitialized) {
+        this.tiktokenWrapper.encoding.free();
+      }
     } catch (error) {
       console.warn('Warning: Failed to free tokenizer encoding:', error instanceof Error ? error.message : 'Unknown error');
     }

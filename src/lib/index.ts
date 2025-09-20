@@ -6,7 +6,13 @@
  * 
  * @example
  * ```typescript
- * import { countTokens } from 'contextcalc';
+ * import { countTokens, isTiktokenAvailable } from 'contextcalc';
+ * 
+ * // Check if tiktoken is properly initialized
+ * if (!isTiktokenAvailable()) {
+ *   console.error('Tiktoken initialization failed');
+ *   process.exit(1);
+ * }
  * 
  * const tokens = countTokens("Hello, world!");
  * console.log(tokens); // 4
@@ -80,3 +86,10 @@ export function estimateTokens(input: string | object): number {
   // Rough estimation: ~4 characters per token
   return Math.ceil(text.length / 4);
 }
+
+// Re-export tiktoken initialization utilities
+export {
+  isTiktokenAvailable,
+  getTiktokenError,
+  initializeTiktoken
+} from '../utils/tiktokenInit.js';

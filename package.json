@@ -17,10 +17,12 @@
     "./cli": "./dist/cli.js"
   },
   "scripts": {
-    "build": "bun run build:lib && bun run build:cli && bun run build:types",
+    "build": "bun run build:lib && bun run build:cli && bun run build:types && bun run copy:wasm",
     "build:lib": "bun build src/lib/index.ts --outdir dist/lib --target node --format esm --external tiktoken",
     "build:cli": "bun build src/cli.ts --outdir dist --target node --format esm --external tiktoken && chmod +x dist/cli.js",
     "build:types": "bun run tsc --declaration --emitDeclarationOnly --outDir dist --noEmit false",
+    "copy:wasm": "mkdir -p dist && cp node_modules/tiktoken/tiktoken_bg.wasm dist/",
+    "postinstall": "node -e \"try { require('fs').copyFileSync(require.resolve('tiktoken/tiktoken_bg.wasm'), './tiktoken_bg.wasm'); } catch (e) { console.warn('Warning: Could not copy tiktoken wasm file:', e.message); }\"",
     "dev": "bun run src/cli.ts",
     "dev:lib": "bun run src/lib/index.ts",
     "test": "bun test",
@@ -66,7 +68,8 @@
   "files": [
     "dist/",
     "dist/lib/",
-    "dist/**/*.d.ts"
+    "dist/**/*.d.ts",
+    "node_modules/tiktoken/tiktoken_bg.wasm"
   ],
   "peerDependencies": {
     "typescript": "^5"

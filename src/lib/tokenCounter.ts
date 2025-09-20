@@ -1,10 +1,20 @@
 import { Tokenizer } from '../core/tokenizer.js';
+import { isTiktokenAvailable, getTiktokenError } from '../utils/tiktokenInit.js';
 
 // Singleton tokenizer instance for performance
 let tokenizerInstance: Tokenizer | null = null;
 
 function getTokenizer(): Tokenizer {
   if (!tokenizerInstance) {
+    // Check if tiktoken is available before creating the tokenizer
+    if (!isTiktokenAvailable()) {
+      const error = getTiktokenError();
+      if (error) {
+        throw error;
+      }
+      throw new Error('Tiktoken is not available. Please ensure tiktoken is properly installed.');
+    }
+    
     tokenizerInstance = new Tokenizer();
   }
   return tokenizerInstance;
