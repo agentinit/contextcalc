@@ -1,6 +1,6 @@
 {
   "name": "contextcalc",
-  "version": "1.3.3",
+  "version": "1.3.5",
   "description": "A fast CLI tool and library for analyzing codebase structure and token counts for LLM context management",
   "main": "dist/lib/index.js",
   "module": "dist/lib/index.js",
