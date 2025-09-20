@@ -327,6 +327,8 @@ npx contextcalc . --output flat --no-colors --min-tokens 500 | head -10
 
 ContextCalc can be imported and used as a library in your Node.js applications for programmatic token counting.
 
+> ⚠️ **Bundling Notice**: If you're bundling an application that uses contextcalc, mark `tiktoken` as external in your bundler configuration to avoid WebAssembly loading issues. See [DOCS.md](./DOCS.md#using-contextcalc-in-bundled-applications) for detailed guidance.
+
 ### Installation as Library
 
 ```bash

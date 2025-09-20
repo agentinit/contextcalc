@@ -817,6 +817,404 @@ class ContentModerator {
 }
 ```
 
+## Using contextcalc in Bundled Applications
+
+If you're bundling an application that depends on contextcalc, you may encounter issues with tiktoken's WebAssembly module loading. This happens because tiktoken uses a `.wasm` file that needs special handling during bundling.
+
+### The Problem
+
+When bundlers process contextcalc, they may try to bundle tiktoken's WebAssembly file (`tiktoken_bg.wasm`), which can lead to:
+
+- **Runtime errors**: "Cannot resolve module" or "WASM file not found"
+- **Build failures**: Missing or incorrectly bundled `.wasm` files  
+- **Path resolution issues**: Hardcoded paths becoming incorrect after bundling
+
+### Solution: Mark tiktoken as External
+
+The recommended solution is to mark `tiktoken` as external in your bundler configuration, allowing Node.js to resolve it correctly at runtime.
+
+#### Bun
+
+```bash
+# CLI
+bun build src/index.ts --external tiktoken --target node
+
+# For multiple externals
+bun build src/index.ts --external tiktoken --external other-package --target node
+```
+
+**bunfig.toml configuration:**
+```toml
+[build]
+target = "node"
+external = ["tiktoken"]
+```
+
+**TypeScript build script:**
+```typescript
+// build.ts
+import { build } from 'bun';
+
+await build({
+  entrypoints: ['./src/index.ts'],
+  outdir: './dist',
+  target: 'node',
+  external: ['tiktoken'],
+  format: 'esm'
+});
+```
+
+#### Webpack
+
+**webpack.config.js:**
+```javascript
+module.exports = {
+  externals: {
+    'tiktoken': 'commonjs tiktoken'
+  },
+  target: 'node',
+  // ... other config
+};
+```
+
+**For ES modules:**
+```javascript
+module.exports = {
+  externals: {
+    'tiktoken': 'module tiktoken'
+  },
+  experiments: {
+    outputModule: true
+  },
+  // ... other config
+};
+```
+
+#### esbuild
+
+```bash
+# CLI
+esbuild src/index.ts --external:tiktoken --platform=node --outfile=dist/index.js
+
+# For ES modules
+esbuild src/index.ts --external:tiktoken --platform=node --format=esm --outfile=dist/index.js
+```
+
+**Build script:**
+```javascript
+// build.js
+import esbuild from 'esbuild';
+
+await esbuild.build({
+  entryPoints: ['src/index.ts'],
+  bundle: true,
+  platform: 'node',
+  external: ['tiktoken'],
+  outfile: 'dist/index.js'
+});
+```
+
+#### Rollup
+
+**rollup.config.js:**
+```javascript
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+
+export default {
+  input: 'src/index.ts',
+  output: {
+    file: 'dist/index.js',
+    format: 'esm'
+  },
+  external: ['tiktoken'],
+  plugins: [nodeResolve()]
+};
+```
+
+#### Vite
+
+**vite.config.js:**
+```javascript
+export default {
+  build: {
+    rollupOptions: {
+      external: ['tiktoken']
+    },
+    target: 'node18'
+  }
+};
+```
+
+#### Parcel
+
+**package.json:**
+```json
+{
+  "targets": {
+    "main": {
+      "includeNodeModules": {
+        "tiktoken": false
+      }
+    }
+  }
+}
+```
+
+### Alternative: Include tiktoken in Dependencies
+
+If your package will be distributed via npm, ensure tiktoken is listed in your dependencies (not devDependencies):
+
+```json
+{
+  "dependencies": {
+    "contextcalc": "^1.3.3",
+    "tiktoken": "^1.0.17"
+  }
+}
+```
+
+This ensures tiktoken and its WASM file are available when users install your package.
+
+### Docker and Container Considerations
+
+When containerizing applications that use contextcalc:
+
+**Dockerfile example:**
+```dockerfile
+FROM node:18-alpine
+
+# Install dependencies first (better caching)
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy application code
+COPY . .
+
+# Important: Don't bundle tiktoken in multi-stage builds
+# Keep it as a runtime dependency
+CMD ["node", "dist/index.js"]
+```
+
+**Multi-stage build with bundling:**
+```dockerfile
+# Build stage
+FROM node:18-alpine AS builder
+COPY package*.json ./
+RUN npm ci
+COPY . .
+# Ensure tiktoken is external
+RUN npm run build
+
+# Runtime stage  
+FROM node:18-alpine
+# Copy built files AND node_modules (for tiktoken)
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY package*.json ./
+CMD ["node", "dist/index.js"]
+```
+
+### Troubleshooting
+
+#### Common Error Messages
+
+**"Cannot resolve module tiktoken"**
+- ✅ Mark tiktoken as external in bundler config
+- ✅ Ensure tiktoken is in dependencies, not devDependencies
+
+**"tiktoken_bg.wasm not found"**
+- ✅ Don't bundle the WASM file - let Node.js resolve it
+- ✅ Check that node_modules/tiktoken exists in runtime environment
+
+**"Module not found: Can't resolve 'tiktoken'"** 
+- ✅ Install tiktoken: `npm install tiktoken`
+- ✅ Verify tiktoken version compatibility (>=1.0.17)
+
+#### Debugging Steps
+
+1. **Verify tiktoken installation:**
+```bash
+npm list tiktoken
+# Should show tiktoken@1.0.17 or higher
+```
+
+2. **Test tiktoken directly:**
+```javascript
+// test-tiktoken.js
+import { encoding_for_model } from 'tiktoken';
+const enc = encoding_for_model('gpt-4');
+console.log('Tiktoken working:', enc.encode('test').length);
+```
+
+3. **Check bundle contents:**
+```bash
+# For webpack bundles
+npx webpack-bundle-analyzer dist/main.js
+
+# Check if tiktoken is excluded
+grep -r "tiktoken" dist/
+```
+
+4. **Runtime verification:**
+```javascript
+// Add to your app for debugging
+try {
+  const { countTokens } = await import('contextcalc');
+  console.log('ContextCalc loaded successfully');
+} catch (error) {
+  console.error('ContextCalc loading failed:', error.message);
+}
+```
+
+### Framework-Specific Examples
+
+#### Next.js
+
+**next.config.js:**
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('tiktoken');
+    }
+    return config;
+  }
+};
+
+module.exports = nextConfig;
+```
+
+#### Nuxt.js
+
+**nuxt.config.js:**
+```javascript
+export default {
+  build: {
+    extend(config, { isServer }) {
+      if (isServer) {
+        config.externals = config.externals || [];
+        config.externals.push('tiktoken');
+      }
+    }
+  }
+};
+```
+
+#### SvelteKit
+
+**vite.config.js:**
+```javascript
+import { sveltekit } from '@sveltejs/kit/vite';
+
+export default {
+  plugins: [sveltekit()],
+  build: {
+    rollupOptions: {
+      external: ['tiktoken']
+    }
+  }
+};
+```
+
+### Electron Applications
+
+For Electron apps, handle main and renderer processes differently:
+
+**Main process (Node.js):**
+```javascript
+// webpack.main.config.js
+module.exports = {
+  target: 'electron-main',
+  externals: {
+    'tiktoken': 'commonjs tiktoken'
+  }
+};
+```
+
+**Renderer process (if using Node.js integration):**
+```javascript  
+// webpack.renderer.config.js
+module.exports = {
+  target: 'electron-renderer',
+  externals: {
+    'tiktoken': 'commonjs tiktoken'
+  }
+};
+```
+
+### Testing Bundled Applications
+
+**Test your bundled app:**
+```javascript
+// test-bundle.js
+import { countTokens } from './dist/your-bundled-app.js';
+
+const testCases = [
+  'Hello, world!',
+  { message: 'test', data: [1, 2, 3] },
+  'A'.repeat(1000)
+];
+
+testCases.forEach((test, i) => {
+  try {
+    const tokens = countTokens(test);
+    console.log(`Test ${i + 1}: ${tokens} tokens ✅`);
+  } catch (error) {
+    console.error(`Test ${i + 1}: Failed ❌`, error.message);
+  }
+});
+```
+
+**Automated testing in CI/CD:**
+```bash
+# GitHub Actions example
+- name: Test bundled application
+  run: |
+    npm run build
+    node test-bundle.js
+    if [ $? -eq 0 ]; then
+      echo "Bundle test passed ✅"
+    else
+      echo "Bundle test failed ❌"
+      exit 1
+    fi
+```
+
+### Performance Considerations
+
+**Bundle size analysis:**
+```bash
+# Check that tiktoken isn't bundled
+npx bundlesize
+
+# Verify external dependencies
+npm run build && ls -la dist/
+```
+
+**Load time optimization:**
+```javascript
+// Lazy load contextcalc to improve startup time
+const getTokenCounter = async () => {
+  const { countTokens } = await import('contextcalc');
+  return countTokens;
+};
+
+// Use in async context
+const countTokens = await getTokenCounter();
+const tokens = countTokens('Hello, world!');
+```
+
+### Why This Approach Works
+
+1. **Runtime Resolution**: Node.js resolves tiktoken from node_modules at runtime
+2. **WASM Handling**: tiktoken handles its own WASM file loading
+3. **Path Correctness**: No hardcoded bundle paths to break
+4. **Module Compatibility**: Works with both CommonJS and ES modules
+5. **Container Friendly**: Works in Docker and serverless environments
+
+By following these patterns, your bundled applications will reliably work with contextcalc while maintaining optimal bundle size and performance.
+
 ## Quick Reference
 
 ### Function Selection Guide
