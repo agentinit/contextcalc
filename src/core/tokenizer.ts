@@ -51,13 +51,8 @@ export class Tokenizer {
   }
 
   dispose(): void {
-    try {
-      if (this.tiktokenWrapper.isInitialized) {
-        this.tiktokenWrapper.encoding.free();
-      }
-    } catch {
-      // Silently handle disposal errors as they don't affect functionality
-    }
+    // No-op: tiktoken encoding is a shared resource managed centrally in tiktokenInit.ts
+    // Calling encoding.free() here would cause double-free errors for other consumers
   }
 
   formatTokenCount(count: number): string {
