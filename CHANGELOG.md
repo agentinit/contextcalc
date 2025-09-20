@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/agentinit/contextcalc/compare/v1.3.2...v1.3.3) (2025-09-20)
+
+
+### Bug Fixes
+
+* sync CLI version with package.json to resolve version mismatch ([f09c711](https://github.com/agentinit/contextcalc/commit/f09c7116bc0de7ce9aaa31bb31e0a235d49a9f82))
+
 ## [1.3.2](https://github.com/agentinit/contextcalc/compare/v1.3.1...v1.3.2) (2025-09-12)
 
 
