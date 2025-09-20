@@ -4,6 +4,16 @@
 ### Bug Fixes
 
 * sync CLI version with package.json to resolve version mismatch ([f09c711](https://github.com/agentinit/contextcalc/commit/f09c7116bc0de7ce9aaa31bb31e0a235d49a9f82))
+* sync package.json version with published npm version ([9da3515](https://github.com/agentinit/contextcalc/commit/9da35158466805e01f8feb74acc1e3ddac047694))
+* tag ([ea316d1](https://github.com/agentinit/contextcalc/commit/ea316d137a4b2eb32146b316f91241dcb2e80dc2))
+* upd readme regarding wasm ([5fde563](https://github.com/agentinit/contextcalc/commit/5fde56382c8e4c4c7b8a52b32e60c32bea18d88c))
+
+## [1.3.3](https://github.com/agentinit/contextcalc/compare/v1.3.2...v1.3.3) (2025-09-20)
+
+
+### Bug Fixes
+
+* sync CLI version with package.json to resolve version mismatch ([f09c711](https://github.com/agentinit/contextcalc/commit/f09c7116bc0de7ce9aaa31bb31e0a235d49a9f82))
 * tag ([ea316d1](https://github.com/agentinit/contextcalc/commit/ea316d137a4b2eb32146b316f91241dcb2e80dc2))
 * upd readme regarding wasm ([5fde563](https://github.com/agentinit/contextcalc/commit/5fde56382c8e4c4c7b8a52b32e60c32bea18d88c))
 
