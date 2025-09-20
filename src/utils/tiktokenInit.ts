@@ -21,6 +21,15 @@ export function initializeTiktoken(): TiktokenWrapper {
 
   try {
     const encoding = get_encoding(ENCODING_NAME);
+    
+    // Validate the encoding by testing it with a simple string
+    // This will fail if the WASM backend isn't properly initialized
+    try {
+      encoding.encode("test");
+    } catch (validationError) {
+      throw new Error(`Tiktoken encoding validation failed: ${validationError instanceof Error ? validationError.message : 'Unknown validation error'}`);
+    }
+    
     tiktokenInstance = {
       encoding,
       isInitialized: true

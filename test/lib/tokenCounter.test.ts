@@ -5,7 +5,6 @@ import {
   countTokensBatch,
   countTokensFromFile,
   countTokensFromFileWithOptions,
-  dispose,
   getTokenizerInfo
 } from '../../src/lib/tokenCounter.js';
 import fs from 'node:fs/promises';
@@ -24,9 +23,9 @@ describe('TokenCounter Library', () => {
   });
 
   afterAll(async () => {
-    // Clean up
-    dispose();
+    // Clean up temp directory
     await fs.rm(tempDir, { recursive: true, force: true });
+    // Note: Not calling dispose() here as it interferes with concurrent test execution
   });
 
   describe('countTokens', () => {
