@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { formatAsAST } from '../src/formatters/astFormatter.js';
-import type { ScanResult, FileNode, FunctionSymbol, ClassSymbol, ImportSymbol, InterfaceSymbol, VariableSymbol } from '../src/types/index.js';
-import { SymbolType, AnalysisMode, MetricType, TreeSortBy } from '../src/types/index.js';
+import type { ScanResult, FileNode, FunctionSymbol, ClassSymbol, ImportSymbol, InterfaceSymbol, VariableSymbol, TreeOptions } from '../src/types/index.js';
+import { SymbolType, AnalysisMode, TreeSortBy } from '../src/types/index.js';
 
 describe('AST Formatter', () => {
   const createMockScanResult = (nodes: FileNode[]): ScanResult => ({
@@ -12,7 +12,7 @@ describe('AST Formatter', () => {
     cacheMisses: nodes.length
   });
 
-  const mockTreeOptions: any = {
+  const mockTreeOptions: TreeOptions = {
     mode: AnalysisMode.CODE,
     maxSize: '10M',
     gitignore: true,
@@ -22,7 +22,7 @@ describe('AST Formatter', () => {
       showTokens: true,
       showLines: true,
       showSize: true,
-      primary: MetricType.TOKENS
+      showPercentages: true
     },
     absolutePercentages: true,
     showBars: false,
@@ -463,7 +463,7 @@ describe('AST Formatter', () => {
           showTokens: false,
           showLines: false,
           showSize: false,
-          primary: MetricType.TOKENS
+          showPercentages: false
         }
       };
       const output = formatAsAST(result, optionsWithoutMetrics);

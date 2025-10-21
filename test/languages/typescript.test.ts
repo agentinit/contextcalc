@@ -5,7 +5,7 @@ import { SymbolType } from '../../src/types/index.js';
 
 describe('TypeScript Extractor', () => {
   let parser: Parser;
-  let grammar: unknown;
+  let grammar: any;
 
   // Initialize parser before tests
   const initParser = async () => {

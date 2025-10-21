@@ -183,7 +183,7 @@ Extract and display code structure as symbols (functions, classes, interfaces, e
 ```bash
 npx contextcalc . --output ast
 ```
-```
+```text
 src/core/scanner.ts (1750 tokens, 258 lines, 7.6KB)
 ├─ ← from "node:path" { join, relative } line 1
 ├─ C DirectoryScanner lines 11-258

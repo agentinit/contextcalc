@@ -4,7 +4,7 @@ import type { ASTSymbol } from '../../types/index.js';
 export interface LanguageConfig {
   name: string;
   extensions: string[];
-  loadGrammar: () => Promise<unknown>;
+  loadGrammar: () => Promise<any>;
   extractSymbols: (tree: Parser.Tree, sourceCode: string) => ASTSymbol[];
 }
 
