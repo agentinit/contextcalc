@@ -287,46 +287,54 @@ export const TypeScriptConfig: LanguageConfig = {
     }
 
     function traverse(node: Parser.SyntaxNode) {
-      // Extract top-level declarations
-      if (node.type === 'function_declaration' || node.type === 'function') {
-        const func = extractFunction(node);
-        if (func) symbols.push(func);
-      } else if (node.type === 'class_declaration' || node.type === 'class') {
-        const cls = extractClass(node);
-        if (cls) symbols.push(cls);
-      } else if (node.type === 'interface_declaration') {
-        const iface = extractInterface(node);
-        if (iface) symbols.push(iface);
-      } else if (node.type === 'type_alias_declaration') {
-        const typeAlias = extractTypeAlias(node);
-        if (typeAlias) symbols.push(typeAlias);
-      } else if (node.type === 'enum_declaration') {
-        const enumDecl = extractEnum(node);
-        if (enumDecl) symbols.push(enumDecl);
-      } else if (node.type === 'import_statement') {
+      // Check if this node is at the top level (parent is program)
+      const isTopLevel = node.parent?.type === 'program';
+
+      // Extract top-level declarations only
+      if (isTopLevel) {
+        if (node.type === 'function_declaration' || node.type === 'function') {
+          const func = extractFunction(node);
+          if (func) symbols.push(func);
+        } else if (node.type === 'class_declaration' || node.type === 'class') {
+          const cls = extractClass(node);
+          if (cls) symbols.push(cls);
+        } else if (node.type === 'interface_declaration') {
+          const iface = extractInterface(node);
+          if (iface) symbols.push(iface);
+        } else if (node.type === 'type_alias_declaration') {
+          const typeAlias = extractTypeAlias(node);
+          if (typeAlias) symbols.push(typeAlias);
+        } else if (node.type === 'enum_declaration') {
+          const enumDecl = extractEnum(node);
+          if (enumDecl) symbols.push(enumDecl);
+        } else if (node.type === 'lexical_declaration' || node.type === 'variable_declaration') {
+          // Extract top-level variables/constants
+          for (const child of node.namedChildren) {
+            if (child.type === 'variable_declarator') {
+              const nameNode = child.childForFieldName('name');
+              const typeNode = child.childForFieldName('type');
+              const valueNode = child.childForFieldName('value');
+              if (nameNode) {
+                symbols.push({
+                  name: getNodeText(nameNode),
+                  type: node.type === 'lexical_declaration' && getNodeText(node).startsWith('const') ? ST.CONSTANT : ST.VARIABLE,
+                  location: getLocation(child),
+                  variableType: typeNode ? getNodeText(typeNode) : undefined,
+                  value: valueNode ? getNodeText(valueNode) : undefined
+                } as VariableSymbol);
+              }
+            }
+          }
+        }
+      }
+
+      // Import/export statements are naturally top-level, process them regardless
+      if (node.type === 'import_statement') {
         const importDecl = extractImport(node);
         if (importDecl) symbols.push(importDecl);
       } else if (node.type === 'export_statement' || node.type === 'export_default') {
         const exportDecl = extractExport(node);
         if (exportDecl) symbols.push(exportDecl);
-      } else if (node.type === 'lexical_declaration' || node.type === 'variable_declaration') {
-        // Extract top-level variables/constants
-        for (const child of node.namedChildren) {
-          if (child.type === 'variable_declarator') {
-            const nameNode = child.childForFieldName('name');
-            const typeNode = child.childForFieldName('type');
-            const valueNode = child.childForFieldName('value');
-            if (nameNode) {
-              symbols.push({
-                name: getNodeText(nameNode),
-                type: node.type === 'lexical_declaration' && getNodeText(node).startsWith('const') ? ST.CONSTANT : ST.VARIABLE,
-                location: getLocation(child),
-                variableType: typeNode ? getNodeText(typeNode) : undefined,
-                value: valueNode ? getNodeText(valueNode) : undefined
-              } as VariableSymbol);
-            }
-          }
-        }
       }
 
       // Continue traversing for nested structures

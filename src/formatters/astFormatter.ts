@@ -132,11 +132,15 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
     const icon = getSymbolIcon(symbol.type);
     const signature = formatSymbolSignature(symbol);
     const location = showLocation ? ` ${formatLocation(symbol)}` : '';
+    const tokensInfo =
+      options.showTokensPerSymbol && typeof symbol.tokens === 'number'
+        ? (useColors ? chalk.dim(` [${symbol.tokens}t]`) : ` [${symbol.tokens}t]`)
+        : '';
 
     const prefix = isLast ? '└─ ' : '├─ ';
     const symbolName = useColors ? chalk.bold(signature) : signature;
 
-    lines.push(`${indent}${prefix}${icon} ${symbolName}${location}`);
+    lines.push(`${indent}${prefix}${icon} ${symbolName}${tokensInfo}${location}`);
 
     // Handle nested symbols
     const nestedSymbols = getNestedSymbols(symbol);
