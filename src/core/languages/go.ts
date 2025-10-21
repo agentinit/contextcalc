@@ -185,6 +185,11 @@ export const GoConfig: LanguageConfig = {
         }
       }
 
+      // Return null if no imports were found to avoid creating symbols with empty names
+      if (imports.length === 0) {
+        return null;
+      }
+
       return {
         name: from,
         type: ST.IMPORT,

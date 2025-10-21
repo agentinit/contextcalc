@@ -87,8 +87,19 @@ export const JavaConfig: LanguageConfig = {
       const members: ASTSymbol[] = [];
       const bodyNode = node.childForFieldName('body');
       const superclassNode = node.childForFieldName('superclass');
-      const interfacesNode = node.childForFieldName('interfaces');
+      const interfacesNode = node.childForFieldName('interfaces') || node.childForFieldName('super_interfaces');
       const isAbstract = node.children.some(c => c.type === 'modifiers' && getNodeText(c).includes('abstract'));
+
+      // Extract individual interface names from interfaces/super_interfaces node
+      let implementsList: string[] | undefined;
+      if (interfacesNode) {
+        const interfaceNames = interfacesNode.descendantsOfType('type_identifier')
+          .concat(interfacesNode.descendantsOfType('scoped_type_identifier'))
+          .map(n => getNodeText(n));
+        if (interfaceNames.length > 0) {
+          implementsList = interfaceNames;
+        }
+      }
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
@@ -124,7 +135,7 @@ export const JavaConfig: LanguageConfig = {
         type: ST.CLASS,
         location: getLocation(node),
         extends: superclassNode ? getNodeText(superclassNode) : undefined,
-        implements: interfacesNode ? [getNodeText(interfacesNode)] : undefined,
+        implements: implementsList,
         members,
         abstract: isAbstract
       };
@@ -137,6 +148,17 @@ export const JavaConfig: LanguageConfig = {
       const members: ASTSymbol[] = [];
       const bodyNode = node.childForFieldName('body');
       const extendsNode = node.childForFieldName('extends');
+
+      // Extract individual interface names from extends node
+      let extendsList: string[] | undefined;
+      if (extendsNode) {
+        const extendedInterfaces = extendsNode.descendantsOfType('type_identifier')
+          .concat(extendsNode.descendantsOfType('scoped_type_identifier'))
+          .map(n => getNodeText(n));
+        if (extendedInterfaces.length > 0) {
+          extendsList = extendedInterfaces;
+        }
+      }
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
@@ -165,7 +187,7 @@ export const JavaConfig: LanguageConfig = {
         name: getNodeText(nameNode),
         type: ST.INTERFACE,
         location: getLocation(node),
-        extends: extendsNode ? [getNodeText(extendsNode)] : undefined,
+        extends: extendsList,
         members
       };
     }

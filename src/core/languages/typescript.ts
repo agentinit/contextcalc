@@ -63,8 +63,10 @@ export const TypeScriptConfig: LanguageConfig = {
 
       const parameters = extractParameters(node);
       const returnTypeNode = node.childForFieldName('return_type');
-      const isAsync = node.children.some(c => c.type === 'async');
-      const isGenerator = node.children.some(c => c.type === '*');
+      // Check for async keyword in child tokens
+      const isAsync = node.children.some(c => c.type === 'async' || getNodeText(c) === 'async');
+      // Check if this is a generator function by node type
+      const isGenerator = node.type === 'generator_function_declaration' || node.type === 'generator_function';
 
       return {
         name: getNodeText(nameNode),
@@ -84,9 +86,34 @@ export const TypeScriptConfig: LanguageConfig = {
 
       const members: ASTSymbol[] = [];
       const bodyNode = node.childForFieldName('body');
-      const extendsNode = node.children.find(c => c.type === 'class_heritage');
-      const implementsNode = node.children.find(c => c.type === 'implements_clause');
-      const isAbstract = node.children.some(c => c.type === 'abstract');
+
+      // Find class_heritage node which contains extends/implements clauses
+      const heritageNode = node.children.find(c => c.type === 'class_heritage');
+      let extendsValue: string | undefined;
+      let implementsList: string[] | undefined;
+
+      if (heritageNode) {
+        // Extract extends clause
+        const extendsClause = heritageNode.children.find(c => c.type === 'extends_clause');
+        if (extendsClause) {
+          const valueNode = extendsClause.childForFieldName('value');
+          if (valueNode) {
+            extendsValue = getNodeText(valueNode);
+          }
+        }
+
+        // Extract implements clause
+        const implementsClause = heritageNode.children.find(c => c.type === 'implements_clause');
+        if (implementsClause) {
+          const interfaces = implementsClause.namedChildren.filter(c => c.type === 'type_identifier');
+          if (interfaces.length > 0) {
+            implementsList = interfaces.map(i => getNodeText(i));
+          }
+        }
+      }
+
+      // Check if this is an abstract class by node type
+      const isAbstract = node.type === 'abstract_class_declaration';
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
@@ -115,8 +142,8 @@ export const TypeScriptConfig: LanguageConfig = {
         name: getNodeText(nameNode),
         type: ST.CLASS,
         location: getLocation(node),
-        extends: extendsNode ? getNodeText(extendsNode) : undefined,
-        implements: implementsNode ? [getNodeText(implementsNode)] : undefined,
+        extends: extendsValue,
+        implements: implementsList,
         members,
         abstract: isAbstract
       };
@@ -295,7 +322,7 @@ export const TypeScriptConfig: LanguageConfig = {
         if (node.type === 'function_declaration' || node.type === 'function') {
           const func = extractFunction(node);
           if (func) symbols.push(func);
-        } else if (node.type === 'class_declaration' || node.type === 'class') {
+        } else if (node.type === 'class_declaration' || node.type === 'class' || node.type === 'abstract_class_declaration') {
           const cls = extractClass(node);
           if (cls) symbols.push(cls);
         } else if (node.type === 'interface_declaration') {

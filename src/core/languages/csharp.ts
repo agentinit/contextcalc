@@ -103,10 +103,10 @@ export const CSharpConfig: LanguageConfig = {
             const method = extractMethod(child);
             if (method) members.push(method);
           } else if (child.type === 'constructor_declaration') {
-            const constructor = extractMethod(child);
-            if (constructor) {
-              constructor.name = 'constructor';
-              members.push(constructor);
+            const ctor = extractMethod(child);
+            if (ctor) {
+              ctor.name = 'constructor';
+              members.push(ctor);
             }
           } else if (child.type === 'property_declaration') {
             const property = extractProperty(child);
@@ -147,6 +147,15 @@ export const CSharpConfig: LanguageConfig = {
       const bodyNode = node.childForFieldName('body');
       const basesNode = node.childForFieldName('bases');
 
+      // Extract individual base interface names from bases node
+      let extendsList: string[] | undefined;
+      if (basesNode) {
+        extendsList = basesNode.namedChildren
+          .filter(child => child.type !== ',' && child.type !== 'punctuation')
+          .map(child => getNodeText(child));
+        if (extendsList.length === 0) extendsList = undefined;
+      }
+
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
           if (child.type === 'method_declaration') {
@@ -163,7 +172,7 @@ export const CSharpConfig: LanguageConfig = {
         name: getNodeText(nameNode),
         type: ST.INTERFACE,
         location: getLocation(node),
-        extends: basesNode ? [getNodeText(basesNode)] : undefined,
+        extends: extendsList,
         members
       };
     }
