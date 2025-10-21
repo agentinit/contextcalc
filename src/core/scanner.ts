@@ -27,7 +27,7 @@ export class DirectoryScanner {
     this.ignoreManager = new IgnoreManager(projectPath);
     this.enableAST = enableAST;
     if (enableAST) {
-      this.astParser = new ASTParser();
+      this.astParser = new ASTParser(maxFileSize);
     }
   }
 
@@ -138,23 +138,36 @@ export class DirectoryScanner {
       const fileHash = stats.hash;
       
       const cachedEntry = this.cache.get(relativePath, fileHash);
-      
+
       let tokens: number;
       let lines: number;
-      
+      let entities: import('../types/index.js').ASTSymbol[] | undefined;
+
       if (cachedEntry) {
         tokens = cachedEntry.tokens;
         lines = cachedEntry.lines;
+        entities = cachedEntry.entities;
         this.stats.cacheHits++;
       } else {
         const result = await this.tokenizer.countTokens(filePath);
         tokens = result.tokens;
         lines = result.lines;
-        
+
+        // Parse AST if enabled (before caching)
+        if (this.enableAST && this.astParser) {
+          try {
+            entities = await this.astParser.parseFile(filePath);
+          } catch (error) {
+            console.warn(`Warning: Failed to parse AST for ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
+          }
+        }
+
+        // Cache the entry with AST entities
         this.cache.set(relativePath, {
           hash: fileHash,
           tokens,
-          lines
+          lines,
+          entities
         });
         this.stats.cacheMisses++;
       }
@@ -166,21 +179,9 @@ export class DirectoryScanner {
         lines,
         size: stats.size,
         type: 'file',
-        filetype: getFileTypeFromExtension(filePath)
+        filetype: getFileTypeFromExtension(filePath),
+        entities
       };
-
-      // Parse AST if enabled
-      if (this.enableAST && this.astParser) {
-        try {
-          const entities = await this.astParser.parseFile(filePath);
-          if (entities.length > 0) {
-            fileNode.entities = entities;
-          }
-        } catch (error) {
-          // Silently ignore AST parsing errors
-          console.warn(`Warning: Failed to parse AST for ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
-        }
-      }
 
       return fileNode;
     } catch (error) {

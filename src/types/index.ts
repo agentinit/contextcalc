@@ -26,6 +26,7 @@ export interface CacheEntry {
   hash: string;
   tokens: number;
   lines: number;
+  entities?: ASTSymbol[];
 }
 
 export interface Cache {
