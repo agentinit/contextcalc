@@ -169,19 +169,79 @@ export const RustConfig: LanguageConfig = {
       const imports: string[] = [];
       let from = '';
 
-      const declarationNode = node.namedChildren[0];
-      if (declarationNode) {
-        const text = getNodeText(declarationNode);
-        from = text;
+      // Helper to extract path as string (e.g., "std::collections")
+      function getPath(pathNode: Parser.SyntaxNode): string {
+        if (pathNode.type === 'identifier') {
+          return getNodeText(pathNode);
+        } else if (pathNode.type === 'scoped_identifier') {
+          const parts: string[] = [];
+          let current: Parser.SyntaxNode | null = pathNode;
+          while (current && current.type === 'scoped_identifier') {
+            const name = current.childForFieldName('name');
+            if (name) parts.unshift(getNodeText(name));
+            current = current.childForFieldName('path');
+          }
+          if (current && current.type === 'identifier') {
+            parts.unshift(getNodeText(current));
+          }
+          return parts.join('::');
+        }
+        return getNodeText(pathNode);
+      }
 
-        // Extract individual imports from use statement
-        const useTree = declarationNode.descendantsOfType('identifier');
-        for (const id of useTree) {
-          const idText = getNodeText(id);
-          if (idText && !imports.includes(idText)) {
-            imports.push(idText);
+      // Recursively process use_tree to extract imports
+      function processUseTree(useTree: Parser.SyntaxNode, pathPrefix: string = '') {
+        const pathNode = useTree.childForFieldName('path');
+        const listNode = useTree.childForFieldName('list');
+        const aliasNode = useTree.childForFieldName('alias');
+
+        let currentPath = pathPrefix;
+
+        if (pathNode) {
+          const pathStr = getPath(pathNode);
+          currentPath = pathPrefix ? `${pathPrefix}::${pathStr}` : pathStr;
+        }
+
+        // Handle grouped imports: use foo::{bar, baz}
+        if (listNode) {
+          for (const child of listNode.namedChildren) {
+            if (child.type === 'use_tree' || child.type === 'scoped_use_list' || child.type === 'use_list') {
+              processUseTree(child, currentPath);
+            } else if (child.type === 'identifier') {
+              imports.push(getNodeText(child));
+            }
+          }
+        } else if (aliasNode) {
+          // Handle renamed imports: use foo as bar
+          const aliasName = aliasNode.childForFieldName('name');
+          if (aliasName) {
+            imports.push(getNodeText(aliasName));
+          }
+        } else if (pathNode) {
+          // Simple import: extract last component
+          const pathStr = getPath(pathNode);
+          const parts = pathStr.split('::');
+          const lastPart = parts[parts.length - 1];
+          if (lastPart && lastPart !== '*') {
+            imports.push(lastPart);
           }
         }
+
+        // Check for wildcard
+        for (const child of useTree.children) {
+          if (child.type === 'use_wildcard' || getNodeText(child) === '*') {
+            // For wildcard imports, use the full path
+            if (currentPath) {
+              imports.push(`${currentPath}::*`);
+            }
+          }
+        }
+      }
+
+      const useTreeNode = node.childForFieldName('argument');
+      if (useTreeNode) {
+        from = getNodeText(useTreeNode);
+        processUseTree(useTreeNode);
       }
 
       return {

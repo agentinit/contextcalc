@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
 import { ASTParser } from '../src/core/astParser.js';
 import { SymbolType } from '../src/types/index.js';
@@ -233,9 +232,12 @@ function process(id: string, count: number = 10, opts?: object): void {
       const funcSymbol = symbols.find(s => s.name === 'process');
 
       expect(funcSymbol).toBeDefined();
-      if (funcSymbol! && 'parameters' in funcSymbol!) {
-        expect(funcSymbol!.parameters.length).toBe(3);
-        expect(funcSymbol.parameters[0].name).toBe('id');
+      if (funcSymbol && 'parameters' in funcSymbol) {
+        expect(funcSymbol.parameters.length).toBe(3);
+        const firstParam = funcSymbol.parameters[0];
+        if (firstParam) {
+          expect(firstParam.name).toBe('id');
+        }
         // Note: default values and optional flags may vary by tree-sitter parser version
       }
     });

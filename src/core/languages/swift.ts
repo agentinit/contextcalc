@@ -33,21 +33,48 @@ export const SwiftConfig: LanguageConfig = {
 
     function extractParameters(node: Parser.SyntaxNode): Parameter[] {
       const params: Parameter[] = [];
-      const paramsNode = node.childForFieldName('parameters');
+
+      // Find function_value_parameters node (or function_value_parameter_list)
+      let paramsNode: Parser.SyntaxNode | null = null;
+      for (const child of node.children) {
+        if (child.type === 'function_value_parameters' || child.type === 'function_value_parameter_list') {
+          paramsNode = child;
+          break;
+        }
+      }
 
       if (paramsNode) {
         for (const child of paramsNode.namedChildren) {
-          if (child.type === 'parameter') {
-            const nameNode = child.childForFieldName('name');
-            const typeNode = child.childForFieldName('type');
-            const defaultNode = child.childForFieldName('default_value');
+          if (child.type === 'function_value_parameter') {
+            // Get the inner 'parameter' child for name and type
+            let parameterNode: Parser.SyntaxNode | null = null;
+            for (const paramChild of child.namedChildren) {
+              if (paramChild.type === 'parameter') {
+                parameterNode = paramChild;
+                break;
+              }
+            }
 
-            if (nameNode) {
-              params.push({
-                name: getNodeText(nameNode),
-                type: typeNode ? getNodeText(typeNode) : undefined,
-                defaultValue: defaultNode ? getNodeText(defaultNode) : undefined
-              });
+            if (parameterNode) {
+              const nameNode = parameterNode.childForFieldName('name');
+              const typeNode = parameterNode.childForFieldName('type');
+              // default_value is on the parent function_value_parameter, not the parameter node
+              const defaultNode = child.childForFieldName('default_value');
+
+              if (nameNode) {
+                params.push({
+                  name: getNodeText(nameNode),
+                  type: typeNode ? getNodeText(typeNode) : undefined,
+                  defaultValue: defaultNode ? getNodeText(defaultNode) : undefined
+                });
+              } else if (typeNode) {
+                // Handle unnamed parameters (just type)
+                params.push({
+                  name: '_',
+                  type: getNodeText(typeNode),
+                  defaultValue: defaultNode ? getNodeText(defaultNode) : undefined
+                });
+              }
             }
           }
         }
@@ -61,7 +88,7 @@ export const SwiftConfig: LanguageConfig = {
       if (!nameNode) return null;
 
       const parameters = extractParameters(node);
-      const resultNode = node.childForFieldName('result');
+      const returnTypeNode = node.childForFieldName('return_type');
       const isAsync = node.children.some(c => c.type === 'async');
 
       return {
@@ -69,7 +96,7 @@ export const SwiftConfig: LanguageConfig = {
         type: ST.FUNCTION,
         location: getLocation(node),
         parameters,
-        returnType: resultNode ? getNodeText(resultNode) : undefined,
+        returnType: returnTypeNode ? getNodeText(returnTypeNode) : undefined,
         async: isAsync
       };
     }
@@ -91,6 +118,7 @@ export const SwiftConfig: LanguageConfig = {
               members.push(method);
             }
           } else if (child.type === 'property_declaration') {
+            const isConst = child.children.some(c => c.type === 'let');
             for (const binding of child.descendantsOfType('pattern_binding')) {
               const patternNode = binding.childForFieldName('pattern');
               const typeNode = binding.childForFieldName('type');
@@ -98,7 +126,7 @@ export const SwiftConfig: LanguageConfig = {
               if (patternNode) {
                 members.push({
                   name: getNodeText(patternNode),
-                  type: ST.VARIABLE,
+                  type: isConst ? ST.CONSTANT : ST.VARIABLE,
                   location: getLocation(binding),
                   variableType: typeNode ? getNodeText(typeNode) : undefined
                 } as VariableSymbol);
@@ -199,6 +227,7 @@ export const SwiftConfig: LanguageConfig = {
               members.push(method);
             }
           } else if (child.type === 'property_declaration') {
+            const isConst = child.children.some(c => c.type === 'let');
             for (const binding of child.descendantsOfType('pattern_binding')) {
               const patternNode = binding.childForFieldName('pattern');
               const typeNode = binding.childForFieldName('type');
@@ -206,7 +235,7 @@ export const SwiftConfig: LanguageConfig = {
               if (patternNode) {
                 members.push({
                   name: getNodeText(patternNode),
-                  type: ST.VARIABLE,
+                  type: isConst ? ST.CONSTANT : ST.VARIABLE,
                   location: getLocation(binding),
                   variableType: typeNode ? getNodeText(typeNode) : undefined
                 } as VariableSymbol);
@@ -246,10 +275,7 @@ export const SwiftConfig: LanguageConfig = {
       };
     }
 
-    function extractVariable(node: Parser.SyntaxNode, isConst: boolean = false): VariableSymbol | null {
-      const bindingNode = node.descendantsOfType('pattern_binding')[0];
-      if (!bindingNode) return null;
-
+    function extractVariableFromBinding(bindingNode: Parser.SyntaxNode, isConst: boolean = false): VariableSymbol | null {
       const patternNode = bindingNode.childForFieldName('pattern');
       const typeNode = bindingNode.childForFieldName('type');
       const valueNode = bindingNode.childForFieldName('value');
@@ -289,8 +315,10 @@ export const SwiftConfig: LanguageConfig = {
           if (importDecl) symbols.push(importDecl);
         } else if (node.type === 'property_declaration') {
           const isLet = node.children.some(c => c.type === 'let');
-          const variable = extractVariable(node, isLet);
-          if (variable) symbols.push(variable);
+          for (const binding of node.descendantsOfType('pattern_binding')) {
+            const variable = extractVariableFromBinding(binding, isLet);
+            if (variable) symbols.push(variable);
+          }
         }
       }
 

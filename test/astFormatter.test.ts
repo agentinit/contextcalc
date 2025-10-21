@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { test, expect, describe } from 'bun:test';
 import { formatAsAST } from '../src/formatters/astFormatter.js';
 import type { ScanResult, FileNode, FunctionSymbol, ClassSymbol, ImportSymbol, InterfaceSymbol, VariableSymbol } from '../src/types/index.js';

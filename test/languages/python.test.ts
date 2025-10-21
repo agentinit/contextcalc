@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { test, expect, describe } from 'bun:test';
 import { PythonConfig } from '../../src/core/languages/python.js';
 import Parser from 'tree-sitter';
@@ -30,9 +29,12 @@ describe('Python Extractor', () => {
       expect(func).toBeDefined();
       expect(func?.type).toBe(SymbolType.FUNCTION);
 
-      if (func! && 'parameters' in func!) {
+      if (func && 'parameters' in func) {
         expect(func.parameters.length).toBe(1);
-        expect(func.parameters[0].name).toBe('name');
+        const firstParam = func.parameters[0];
+        if (firstParam) {
+          expect(firstParam.name).toBe('name');
+        }
       }
     });
 
@@ -47,9 +49,12 @@ describe('Python Extractor', () => {
       const func = symbols.find(s => s.name === 'add');
       expect(func).toBeDefined();
 
-      if (func! && 'parameters' in func!) {
+      if (func && 'parameters' in func) {
         expect(func.parameters.length).toBe(2);
-        expect(func.parameters[0].type).toContain('int');
+        const firstParam = func.parameters[0];
+        if (firstParam) {
+          expect(firstParam.type).toContain('int');
+        }
       }
 
       if (func && 'returnType' in func) {
@@ -135,10 +140,15 @@ describe('Python Extractor', () => {
       expect(cls).toBeDefined();
       expect(cls?.type).toBe(SymbolType.CLASS);
 
-      if (cls! && 'members' in cls!) {
+      if (cls && 'members' in cls) {
         expect(cls.members.length).toBeGreaterThan(0);
-        expect(cls.members[0].name).toBe('add');
-        expect(cls.members[0].type).toBe(SymbolType.METHOD);
+        const firstMember = cls.members[0];
+        if (firstMember) {
+          expect(firstMember.name).toBe('add');
+          if ('type' in firstMember) {
+            expect(firstMember.type).toBe(SymbolType.METHOD);
+          }
+        }
       }
     });
 
@@ -303,9 +313,12 @@ class MyClass:
       const symbols = PythonConfig.extractSymbols(tree, code);
 
       const func = symbols[0];
-      expect(func.location).toBeDefined();
-      expect(func.location.startLine).toBe(1);
-      expect(func.location.endLine).toBeGreaterThan(1);
+      expect(func).toBeDefined();
+      if (func) {
+        expect(func.location).toBeDefined();
+        expect(func.location.startLine).toBe(1);
+        expect(func.location.endLine).toBeGreaterThan(1);
+      }
     });
   });
 

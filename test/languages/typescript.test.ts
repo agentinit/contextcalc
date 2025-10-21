@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { test, expect, describe } from 'bun:test';
 import { TypeScriptConfig } from '../../src/core/languages/typescript.js';
 import Parser from 'tree-sitter';
@@ -31,10 +30,13 @@ describe('TypeScript Extractor', () => {
       expect(func).toBeDefined();
       expect(func?.type).toBe(SymbolType.FUNCTION);
 
-      if (func! && 'parameters' in func!) {
+      if (func && 'parameters' in func) {
         expect(func.parameters.length).toBe(1);
-        expect(func.parameters[0].name).toBe('name');
-        expect(func.parameters[0].type).toContain('string');
+        const firstParam = func.parameters[0];
+        if (firstParam) {
+          expect(firstParam.name).toBe('name');
+          expect(firstParam.type).toContain('string');
+        }
       }
 
       if (func && 'returnType' in func) {
@@ -85,8 +87,11 @@ describe('TypeScript Extractor', () => {
       const func = symbols.find(s => s.name === 'config');
       expect(func).toBeDefined();
 
-      if (func! && 'parameters' in func!) {
-        expect(func.parameters[0].optional).toBe(true);
+      if (func && 'parameters' in func) {
+        const firstParam = func.parameters[0];
+        if (firstParam) {
+          expect(firstParam.optional).toBe(true);
+        }
       }
     });
   });
@@ -107,10 +112,15 @@ describe('TypeScript Extractor', () => {
       expect(cls).toBeDefined();
       expect(cls?.type).toBe(SymbolType.CLASS);
 
-      if (cls! && 'members' in cls!) {
+      if (cls && 'members' in cls) {
         expect(cls.members.length).toBeGreaterThan(0);
-        expect(cls.members[0].name).toBe('add');
-        expect(cls.members[0].type).toBe(SymbolType.METHOD);
+        const firstMember = cls.members[0];
+        if (firstMember) {
+          expect(firstMember.name).toBe('add');
+          if ('type' in firstMember) {
+            expect(firstMember.type).toBe(SymbolType.METHOD);
+          }
+        }
       }
     });
 
@@ -217,7 +227,10 @@ describe('TypeScript Extractor', () => {
 
       if (iface && 'members' in iface) {
         expect(iface.members.length).toBe(2);
-        expect(iface.members[0].type).toBe(SymbolType.METHOD);
+        const firstMember = iface.members[0];
+        if (firstMember && 'type' in firstMember) {
+          expect(firstMember.type).toBe(SymbolType.METHOD);
+        }
       }
     });
 
@@ -411,9 +424,12 @@ const topLevel = 1;
       const symbols = TypeScriptConfig.extractSymbols(tree, code);
 
       const func = symbols[0];
-      expect(func.location).toBeDefined();
-      expect(func.location.startLine).toBe(1);
-      expect(func.location.endLine).toBeGreaterThan(1);
+      expect(func).toBeDefined();
+      if (func) {
+        expect(func.location).toBeDefined();
+        expect(func.location.startLine).toBe(1);
+        expect(func.location.endLine).toBeGreaterThan(1);
+      }
     });
   });
 });
