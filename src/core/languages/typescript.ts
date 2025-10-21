@@ -87,33 +87,43 @@ export const TypeScriptConfig: LanguageConfig = {
       const members: ASTSymbol[] = [];
       const bodyNode = node.childForFieldName('body');
 
-      // Find class_heritage node which contains extends/implements clauses
-      const heritageNode = node.children.find(c => c.type === 'class_heritage');
+      // Extract extends and implements from class_heritage child node
       let extendsValue: string | undefined;
       let implementsList: string[] | undefined;
 
-      if (heritageNode) {
-        // Extract extends clause
-        const extendsClause = heritageNode.children.find(c => c.type === 'extends_clause');
-        if (extendsClause) {
-          const valueNode = extendsClause.childForFieldName('value');
-          if (valueNode) {
-            extendsValue = getNodeText(valueNode);
-          }
-        }
-
-        // Extract implements clause
-        const implementsClause = heritageNode.children.find(c => c.type === 'implements_clause');
-        if (implementsClause) {
-          const interfaces = implementsClause.namedChildren.filter(c => c.type === 'type_identifier');
-          if (interfaces.length > 0) {
-            implementsList = interfaces.map(i => getNodeText(i));
+      for (const child of node.children) {
+        if (child.type === 'class_heritage') {
+          // Process extends clause
+          for (const heritageChild of child.children) {
+            if (heritageChild.type === 'extends_clause') {
+              const valueNode = heritageChild.childForFieldName('value');
+              if (valueNode) {
+                extendsValue = getNodeText(valueNode);
+              }
+            } else if (heritageChild.type === 'implements_clause') {
+              // Extract all implemented interfaces
+              const interfaces: string[] = [];
+              for (const implChild of heritageChild.namedChildren) {
+                if (implChild.type === 'type_identifier') {
+                  interfaces.push(getNodeText(implChild));
+                }
+              }
+              if (interfaces.length > 0) {
+                implementsList = interfaces;
+              }
+            }
           }
         }
       }
 
-      // Check if this is an abstract class by node type
-      const isAbstract = node.type === 'abstract_class_declaration';
+      // Check if this is an abstract class by checking for abstract keyword
+      let isAbstract = false;
+      for (const child of node.children) {
+        if (child.type === 'abstract' || getNodeText(child) === 'abstract') {
+          isAbstract = true;
+          break;
+        }
+      }
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {

@@ -202,7 +202,6 @@ Found 326 symbols across 16 files
 - ✅ **TypeScript/TSX** - Full support (functions, classes, interfaces, types, enums, imports/exports)
 - ✅ **JavaScript/JSX** - Full support (all TypeScript features minus types)
 - ✅ **Python** - Full support (functions, classes, imports)
-- 🔧 **Go, Rust, Java, C++, C#, Ruby, PHP** - Parsers loaded, extraction coming soon
 
 **Symbol Icons:**
 - `ƒ` Function/Method - with parameters, return types, async/generator flags

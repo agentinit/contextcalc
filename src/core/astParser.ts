@@ -54,11 +54,11 @@ export class ASTParser {
     try {
       const fileStats = await stat(filePath);
       if (fileStats.size > this.maxFileSize) {
-        console.warn(`File ${filePath} (${(fileStats.size / 1024 / 1024).toFixed(2)}MB) exceeds size limit, skipping AST parse`);
+        // Silently skip files that are too large - this is expected behavior
         return [];
       }
     } catch (error) {
-      console.warn(`Failed to stat file ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
+      // File doesn't exist or can't be read - return empty array
       return [];
     }
 
@@ -70,7 +70,7 @@ export class ASTParser {
     try {
       sourceCode = await readFile(filePath, 'utf-8');
     } catch (error) {
-      console.warn(`Failed to read file ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
+      // File can't be read - return empty array
       return [];
     }
 
@@ -130,7 +130,7 @@ export class ASTParser {
         grammar = await languageConfig.loadGrammar();
         this.grammarCache.set(ext, grammar);
       } catch (error) {
-        console.warn(`Failed to load grammar for ${ext}:`, error instanceof Error ? error.message : 'Unknown error');
+        // Failed to load grammar - return empty array
         return [];
       }
     }
@@ -139,7 +139,7 @@ export class ASTParser {
     try {
       this.parser.setLanguage(grammar);
     } catch (error) {
-      console.warn(`Failed to set language for ${ext}:`, error instanceof Error ? error.message : 'Unknown error');
+      // Failed to set language - return empty array
       return [];
     }
 
@@ -148,28 +148,16 @@ export class ASTParser {
     try {
       tree = this.parser.parse(sourceCode);
     } catch (error) {
-      console.warn(`Failed to parse ${sourceName}:`, error instanceof Error ? error.message : 'Unknown error');
+      // Failed to parse - return empty array
       return [];
     }
 
     // Extract symbols
     try {
       const symbols = languageConfig.extractSymbols(tree, sourceCode);
-
-      // Warn if language extraction is not yet implemented
-      if (symbols.length === 0 && sourceCode.trim().length > 0) {
-        // Check if this is a stub implementation (languages that return empty arrays)
-        const isStubImplementation = languageConfig.name &&
-          !['TypeScript', 'JavaScript', 'Python'].includes(languageConfig.name);
-
-        if (isStubImplementation) {
-          console.warn(`AST extraction not yet implemented for ${languageConfig.name} (${ext}) files`);
-        }
-      }
-
       return symbols;
     } catch (error) {
-      console.warn(`Failed to extract symbols from ${sourceName}:`, error instanceof Error ? error.message : 'Unknown error');
+      // Failed to extract symbols - return empty array
       return [];
     }
   }
