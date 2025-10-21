@@ -1,6 +1,7 @@
 import type Parser from 'tree-sitter';
-import type { Symbol } from '../../types/index.js';
+import type { ASTSymbol } from '../../types/index.js';
 import type { LanguageConfig } from './index.js';
+import { TypeScriptConfig } from './typescript.js';
 
 export const JavaScriptConfig: LanguageConfig = {
   name: 'JavaScript',
@@ -11,10 +12,8 @@ export const JavaScriptConfig: LanguageConfig = {
     return JSLanguage.default;
   },
 
-  extractSymbols: (tree: Parser.Tree, sourceCode: string): Symbol[] => {
+  extractSymbols: (tree: Parser.Tree, sourceCode: string): ASTSymbol[] => {
     // Reuse TypeScript extractor since JavaScript is a subset
-    // We'll import the TypeScript config and use its extractor
-    const { TypeScriptConfig } = require('./typescript.js');
     return TypeScriptConfig.extractSymbols(tree, sourceCode);
   }
 };

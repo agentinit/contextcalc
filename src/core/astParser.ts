@@ -1,13 +1,13 @@
 import Parser from 'tree-sitter';
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
-import type { Symbol, ASTOptions } from '../types/index.js';
+import type { ASTSymbol, ASTOptions } from '../types/index.js';
 import { initializeLanguages, getLanguageByExtension } from './languages/index.js';
 
 export class ASTParser {
   private parser: Parser | null = null;
   private initialized = false;
-  private grammarCache: Map<string, any> = new Map();
+  private grammarCache: Map<string, unknown> = new Map();
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -17,7 +17,7 @@ export class ASTParser {
     this.initialized = true;
   }
 
-  async parseFile(filePath: string, options: ASTOptions = {}): Promise<Symbol[]> {
+  async parseFile(filePath: string, _options: ASTOptions = {}): Promise<ASTSymbol[]> {
     if (!this.initialized || !this.parser) {
       await this.initialize();
     }
@@ -82,7 +82,7 @@ export class ASTParser {
     }
   }
 
-  async parseText(text: string, language: string, options: ASTOptions = {}): Promise<Symbol[]> {
+  async parseText(text: string, language: string, _options: ASTOptions = {}): Promise<ASTSymbol[]> {
     if (!this.initialized || !this.parser) {
       await this.initialize();
     }

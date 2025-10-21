@@ -1,5 +1,5 @@
 import type Parser from 'tree-sitter';
-import type { Symbol } from '../../types/index.js';
+import type { ASTSymbol } from '../../types/index.js';
 import type { LanguageConfig } from './index.js';
 
 export const RubyConfig: LanguageConfig = {
@@ -11,7 +11,7 @@ export const RubyConfig: LanguageConfig = {
     return RubyLanguage.default;
   },
 
-  extractSymbols: (tree: Parser.Tree, sourceCode: string): Symbol[] => {
+  extractSymbols: (_tree: Parser.Tree, _sourceCode: string): ASTSymbol[] => {
     // TODO: Implement Ruby-specific symbol extraction
     return [];
   }

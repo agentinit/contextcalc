@@ -1,11 +1,11 @@
 import type Parser from 'tree-sitter';
-import type { Symbol } from '../../types/index.js';
+import type { ASTSymbol } from '../../types/index.js';
 
 export interface LanguageConfig {
   name: string;
   extensions: string[];
-  loadGrammar: () => Promise<any>;
-  extractSymbols: (tree: Parser.Tree, sourceCode: string) => Symbol[];
+  loadGrammar: () => Promise<unknown>;
+  extractSymbols: (tree: Parser.Tree, sourceCode: string) => ASTSymbol[];
 }
 
 export interface LanguageRegistry {

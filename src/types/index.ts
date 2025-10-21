@@ -7,7 +7,7 @@ export interface FileNode {
   type: 'file';
   filetype: string;
   percentage?: number;
-  entities?: Symbol[];
+  entities?: ASTSymbol[];
 }
 
 export interface FolderNode {
@@ -163,14 +163,14 @@ export interface ClassSymbol extends BaseSymbol {
   type: SymbolType.CLASS;
   extends?: string;
   implements?: string[];
-  members: Symbol[];
+  members: ASTSymbol[];
   abstract?: boolean;
 }
 
 export interface InterfaceSymbol extends BaseSymbol {
   type: SymbolType.INTERFACE;
   extends?: string[];
-  members: Symbol[];
+  members: ASTSymbol[];
 }
 
 export interface TypeSymbol extends BaseSymbol {
@@ -205,7 +205,7 @@ export interface ExportSymbol extends BaseSymbol {
 
 export interface NamespaceSymbol extends BaseSymbol {
   type: SymbolType.NAMESPACE;
-  members: Symbol[];
+  members: ASTSymbol[];
 }
 
 export interface StructSymbol extends BaseSymbol {
@@ -215,10 +215,10 @@ export interface StructSymbol extends BaseSymbol {
 
 export interface TraitSymbol extends BaseSymbol {
   type: SymbolType.TRAIT;
-  members: Symbol[];
+  members: ASTSymbol[];
 }
 
-export type Symbol =
+export type ASTSymbol =
   | FunctionSymbol
   | ClassSymbol
   | InterfaceSymbol

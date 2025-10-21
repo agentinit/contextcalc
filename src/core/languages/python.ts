@@ -1,5 +1,5 @@
 import type Parser from 'tree-sitter';
-import type { Symbol, FunctionSymbol, ClassSymbol, ImportSymbol, SourceLocation, Parameter } from '../../types/index.js';
+import type { ASTSymbol, FunctionSymbol, ClassSymbol, ImportSymbol, SourceLocation, Parameter } from '../../types/index.js';
 import type { LanguageConfig } from './index.js';
 import { SymbolType as ST } from '../../types/index.js';
 
@@ -12,8 +12,8 @@ export const PythonConfig: LanguageConfig = {
     return PythonLanguage.default;
   },
 
-  extractSymbols: (tree: Parser.Tree, sourceCode: string): Symbol[] => {
-    const symbols: Symbol[] = [];
+  extractSymbols: (tree: Parser.Tree, sourceCode: string): ASTSymbol[] => {
+    const symbols: ASTSymbol[] = [];
     const rootNode = tree.rootNode;
 
     function getLocation(node: Parser.SyntaxNode): SourceLocation {
@@ -78,7 +78,7 @@ export const PythonConfig: LanguageConfig = {
       const nameNode = node.childForFieldName('name');
       if (!nameNode) return null;
 
-      const members: Symbol[] = [];
+      const members: ASTSymbol[] = [];
       const bodyNode = node.childForFieldName('body');
       const superclassesNode = node.childForFieldName('superclasses');
 

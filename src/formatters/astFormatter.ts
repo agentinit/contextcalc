@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type { ScanResult, Node, FileNode, FolderNode, Symbol, TreeOptions, FunctionSymbol, ClassSymbol, InterfaceSymbol, EnumSymbol, ImportSymbol, ExportSymbol, NamespaceSymbol } from '../types/index.js';
+import type { ScanResult, Node, FileNode, ASTSymbol, TreeOptions, FunctionSymbol, ClassSymbol, InterfaceSymbol, EnumSymbol, ImportSymbol, ExportSymbol, NamespaceSymbol } from '../types/index.js';
 import { SymbolType } from '../types/index.js';
 import { formatFileSize } from '../utils/formatUtils.js';
 
@@ -44,10 +44,10 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
     }
   }
 
-  function formatSymbolSignature(symbol: Symbol): string {
+  function formatSymbolSignature(symbol: ASTSymbol): string {
     switch (symbol.type) {
       case SymbolType.FUNCTION:
-      case SymbolType.METHOD:
+      case SymbolType.METHOD: {
         const funcSymbol = symbol as FunctionSymbol;
         if (funcSymbol.signature) {
           return funcSymbol.signature;
@@ -63,8 +63,9 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
         if (funcSymbol.returnType) sig += `: ${funcSymbol.returnType}`;
         if (funcSymbol.async) sig = `async ${sig}`;
         return sig;
+      }
 
-      case SymbolType.CLASS:
+      case SymbolType.CLASS: {
         const classSymbol = symbol as ClassSymbol;
         let classSig = classSymbol.name;
         if (classSymbol.abstract) classSig = `abstract ${classSig}`;
@@ -73,42 +74,48 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
           classSig += ` implements ${classSymbol.implements.join(', ')}`;
         }
         return classSig;
+      }
 
-      case SymbolType.INTERFACE:
+      case SymbolType.INTERFACE: {
         const ifaceSymbol = symbol as InterfaceSymbol;
         let ifaceSig = ifaceSymbol.name;
         if (ifaceSymbol.extends && ifaceSymbol.extends.length > 0) {
           ifaceSig += ` extends ${ifaceSymbol.extends.join(', ')}`;
         }
         return ifaceSig;
+      }
 
-      case SymbolType.ENUM:
+      case SymbolType.ENUM: {
         const enumSymbol = symbol as EnumSymbol;
         return `${enumSymbol.name} { ${enumSymbol.members.length} members }`;
+      }
 
-      case SymbolType.IMPORT:
+      case SymbolType.IMPORT: {
         const importSymbol = symbol as ImportSymbol;
         let importSig = `from "${importSymbol.from}"`;
         if (importSymbol.default) importSig = `${importSymbol.default} ${importSig}`;
         if (importSymbol.imports.length > 0) importSig += ` { ${importSymbol.imports.join(', ')} }`;
         if (importSymbol.namespace) importSig += ` as ${importSymbol.namespace}`;
         return importSig;
+      }
 
-      case SymbolType.EXPORT:
+      case SymbolType.EXPORT: {
         const exportSymbol = symbol as ExportSymbol;
         if (exportSymbol.default) return `default ${exportSymbol.default}`;
         return `{ ${exportSymbol.exports.join(', ')} }`;
+      }
 
-      case SymbolType.NAMESPACE:
+      case SymbolType.NAMESPACE: {
         const nsSymbol = symbol as NamespaceSymbol;
         return `${nsSymbol.name} { ${nsSymbol.members.length} members }`;
+      }
 
       default:
         return symbol.name;
     }
   }
 
-  function formatLocation(symbol: Symbol): string {
+  function formatLocation(symbol: ASTSymbol): string {
     const loc = symbol.location;
     if (loc.startLine === loc.endLine) {
       return useColors
@@ -120,7 +127,7 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
       : `lines ${loc.startLine}-${loc.endLine}`;
   }
 
-  function formatSymbol(symbol: Symbol, indent: string, isLast: boolean, showLocation: boolean = true): string[] {
+  function formatSymbol(symbol: ASTSymbol, indent: string, isLast: boolean, showLocation: boolean = true): string[] {
     const lines: string[] = [];
     const icon = getSymbolIcon(symbol.type);
     const signature = formatSymbolSignature(symbol);
@@ -144,13 +151,13 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
     return lines;
   }
 
-  function getNestedSymbols(symbol: Symbol): Symbol[] {
+  function getNestedSymbols(symbol: ASTSymbol): ASTSymbol[] {
     if ('members' in symbol && Array.isArray(symbol.members)) {
       // For enums, members are { name, value } objects, not Symbols
       if (symbol.type === SymbolType.ENUM) {
         return [];
       }
-      return symbol.members as Symbol[];
+      return symbol.members as ASTSymbol[];
     }
     return [];
   }
@@ -238,7 +245,7 @@ function countTotalSymbols(nodes: Node[]): number {
     }
   }
 
-  function countNestedSymbols(symbol: Symbol): number {
+  function countNestedSymbols(symbol: ASTSymbol): number {
     let nested = 0;
     if ('members' in symbol && Array.isArray(symbol.members)) {
       // For enums, count the enum members directly
@@ -247,7 +254,7 @@ function countTotalSymbols(nodes: Node[]): number {
       }
       // For other types (class, interface, etc.), recursively count nested symbols
       nested += symbol.members.length;
-      (symbol.members as Symbol[]).forEach(member => {
+      (symbol.members as ASTSymbol[]).forEach(member => {
         nested += countNestedSymbols(member);
       });
     }
