@@ -1,15 +1,15 @@
 import type Parser from 'tree-sitter';
-import type { ASTSymbol, FunctionSymbol, ClassSymbol, InterfaceSymbol, StructSymbol, EnumSymbol, NamespaceSymbol, ImportSymbol, VariableSymbol, SourceLocation, Parameter } from '../../types/index.js';
+import type { ASTSymbol, FunctionSymbol, ClassSymbol, StructSymbol, EnumSymbol, InterfaceSymbol, ImportSymbol, VariableSymbol, SourceLocation, Parameter } from '../../types/index.js';
 import type { LanguageConfig } from './index.js';
 import { SymbolType as ST } from '../../types/index.js';
 
-export const CSharpConfig: LanguageConfig = {
-  name: 'C#',
-  extensions: ['.cs'],
+export const SwiftConfig: LanguageConfig = {
+  name: 'Swift',
+  extensions: ['.swift'],
 
   loadGrammar: async () => {
-    const CSharpLanguage = await import('tree-sitter-c-sharp');
-    return CSharpLanguage.default;
+    const SwiftLanguage = await import('tree-sitter-swift');
+    return SwiftLanguage.default;
   },
 
   extractSymbols: (tree: Parser.Tree, sourceCode: string): ASTSymbol[] => {
@@ -33,10 +33,10 @@ export const CSharpConfig: LanguageConfig = {
 
     function extractParameters(node: Parser.SyntaxNode): Parameter[] {
       const params: Parameter[] = [];
-      const paramList = node.childForFieldName('parameters');
+      const paramsNode = node.childForFieldName('parameters');
 
-      if (paramList) {
-        for (const child of paramList.namedChildren) {
+      if (paramsNode) {
+        for (const child of paramsNode.namedChildren) {
           if (child.type === 'parameter') {
             const nameNode = child.childForFieldName('name');
             const typeNode = child.childForFieldName('type');
@@ -56,35 +56,21 @@ export const CSharpConfig: LanguageConfig = {
       return params;
     }
 
-    function extractMethod(node: Parser.SyntaxNode): FunctionSymbol | null {
+    function extractFunction(node: Parser.SyntaxNode): FunctionSymbol | null {
       const nameNode = node.childForFieldName('name');
       if (!nameNode) return null;
 
       const parameters = extractParameters(node);
-      const typeNode = node.childForFieldName('type');
+      const resultNode = node.childForFieldName('result');
       const isAsync = node.children.some(c => c.type === 'async');
 
       return {
         name: getNodeText(nameNode),
-        type: ST.METHOD,
+        type: ST.FUNCTION,
         location: getLocation(node),
         parameters,
-        returnType: typeNode ? getNodeText(typeNode) : undefined,
+        returnType: resultNode ? getNodeText(resultNode) : undefined,
         async: isAsync
-      };
-    }
-
-    function extractProperty(node: Parser.SyntaxNode): VariableSymbol | null {
-      const nameNode = node.childForFieldName('name');
-      if (!nameNode) return null;
-
-      const typeNode = node.childForFieldName('type');
-
-      return {
-        name: getNodeText(nameNode),
-        type: ST.VARIABLE,
-        location: getLocation(node),
-        variableType: typeNode ? getNodeText(typeNode) : undefined
       };
     }
 
@@ -94,33 +80,26 @@ export const CSharpConfig: LanguageConfig = {
 
       const members: ASTSymbol[] = [];
       const bodyNode = node.childForFieldName('body');
-      const basesNode = node.childForFieldName('bases');
-      const isAbstract = node.children.some(c => c.type === 'abstract');
+      const inheritanceNode = node.childForFieldName('inheritance');
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
-          if (child.type === 'method_declaration') {
-            const method = extractMethod(child);
-            if (method) members.push(method);
-          } else if (child.type === 'constructor_declaration') {
-            const constructor = extractMethod(child);
-            if (constructor) {
-              constructor.name = 'constructor';
-              members.push(constructor);
+          if (child.type === 'function_declaration') {
+            const method = extractFunction(child);
+            if (method) {
+              method.type = ST.METHOD;
+              members.push(method);
             }
           } else if (child.type === 'property_declaration') {
-            const property = extractProperty(child);
-            if (property) members.push(property);
-          } else if (child.type === 'field_declaration') {
-            const declarator = child.descendantsOfType('variable_declarator')[0];
-            if (declarator) {
-              const fieldName = declarator.childForFieldName('name');
-              const typeNode = child.childForFieldName('type');
-              if (fieldName) {
+            for (const binding of child.descendantsOfType('pattern_binding')) {
+              const patternNode = binding.childForFieldName('pattern');
+              const typeNode = binding.childForFieldName('type');
+
+              if (patternNode) {
                 members.push({
-                  name: getNodeText(fieldName),
+                  name: getNodeText(patternNode),
                   type: ST.VARIABLE,
-                  location: getLocation(declarator),
+                  location: getLocation(binding),
                   variableType: typeNode ? getNodeText(typeNode) : undefined
                 } as VariableSymbol);
               }
@@ -133,37 +112,7 @@ export const CSharpConfig: LanguageConfig = {
         name: getNodeText(nameNode),
         type: ST.CLASS,
         location: getLocation(node),
-        extends: basesNode ? getNodeText(basesNode) : undefined,
-        members,
-        abstract: isAbstract
-      };
-    }
-
-    function extractInterface(node: Parser.SyntaxNode): InterfaceSymbol | null {
-      const nameNode = node.childForFieldName('name');
-      if (!nameNode) return null;
-
-      const members: ASTSymbol[] = [];
-      const bodyNode = node.childForFieldName('body');
-      const basesNode = node.childForFieldName('bases');
-
-      if (bodyNode) {
-        for (const child of bodyNode.namedChildren) {
-          if (child.type === 'method_declaration') {
-            const method = extractMethod(child);
-            if (method) members.push(method);
-          } else if (child.type === 'property_declaration') {
-            const property = extractProperty(child);
-            if (property) members.push(property);
-          }
-        }
-      }
-
-      return {
-        name: getNodeText(nameNode),
-        type: ST.INTERFACE,
-        location: getLocation(node),
-        extends: basesNode ? [getNodeText(basesNode)] : undefined,
+        extends: inheritanceNode ? getNodeText(inheritanceNode) : undefined,
         members
       };
     }
@@ -177,15 +126,14 @@ export const CSharpConfig: LanguageConfig = {
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
-          if (child.type === 'field_declaration') {
-            const declarator = child.descendantsOfType('variable_declarator')[0];
-            const typeNode = child.childForFieldName('type');
+          if (child.type === 'property_declaration') {
+            for (const binding of child.descendantsOfType('pattern_binding')) {
+              const patternNode = binding.childForFieldName('pattern');
+              const typeNode = binding.childForFieldName('type');
 
-            if (declarator) {
-              const fieldName = declarator.childForFieldName('name');
-              if (fieldName) {
+              if (patternNode) {
                 fields.push({
-                  name: getNodeText(fieldName),
+                  name: getNodeText(patternNode),
                   type: typeNode ? getNodeText(typeNode) : undefined
                 });
               }
@@ -211,15 +159,16 @@ export const CSharpConfig: LanguageConfig = {
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
-          if (child.type === 'enum_member_declaration') {
-            const memberName = child.childForFieldName('name');
-            const valueNode = child.childForFieldName('value');
-
-            if (memberName) {
-              members.push({
-                name: getNodeText(memberName),
-                value: valueNode ? getNodeText(valueNode) : undefined
-              });
+          if (child.type === 'enum_case_declaration') {
+            for (const caseChild of child.namedChildren) {
+              if (caseChild.type === 'enum_case') {
+                const caseName = caseChild.childForFieldName('name');
+                if (caseName) {
+                  members.push({
+                    name: getNodeText(caseName)
+                  });
+                }
+              }
             }
           }
         }
@@ -233,29 +182,45 @@ export const CSharpConfig: LanguageConfig = {
       };
     }
 
-    function extractNamespace(node: Parser.SyntaxNode): NamespaceSymbol | null {
+    function extractProtocol(node: Parser.SyntaxNode): InterfaceSymbol | null {
       const nameNode = node.childForFieldName('name');
       if (!nameNode) return null;
 
       const members: ASTSymbol[] = [];
       const bodyNode = node.childForFieldName('body');
+      const inheritanceNode = node.childForFieldName('inheritance');
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
-          if (child.type === 'class_declaration') {
-            const cls = extractClass(child);
-            if (cls) members.push(cls);
-          } else if (child.type === 'interface_declaration') {
-            const iface = extractInterface(child);
-            if (iface) members.push(iface);
+          if (child.type === 'function_declaration') {
+            const method = extractFunction(child);
+            if (method) {
+              method.type = ST.METHOD;
+              members.push(method);
+            }
+          } else if (child.type === 'property_declaration') {
+            for (const binding of child.descendantsOfType('pattern_binding')) {
+              const patternNode = binding.childForFieldName('pattern');
+              const typeNode = binding.childForFieldName('type');
+
+              if (patternNode) {
+                members.push({
+                  name: getNodeText(patternNode),
+                  type: ST.VARIABLE,
+                  location: getLocation(binding),
+                  variableType: typeNode ? getNodeText(typeNode) : undefined
+                } as VariableSymbol);
+              }
+            }
           }
         }
       }
 
       return {
         name: getNodeText(nameNode),
-        type: ST.NAMESPACE,
+        type: ST.INTERFACE,
         location: getLocation(node),
+        extends: inheritanceNode ? [getNodeText(inheritanceNode)] : undefined,
         members
       };
     }
@@ -264,10 +229,12 @@ export const CSharpConfig: LanguageConfig = {
       let from = '';
       const imports: string[] = [];
 
-      const nameNode = node.childForFieldName('name');
-      if (nameNode) {
-        from = getNodeText(nameNode);
-        imports.push(from);
+      // Get the module name from import statement
+      for (const child of node.namedChildren) {
+        if (child.type === 'identifier' || child.type === 'scoped_identifier') {
+          from = getNodeText(child);
+          imports.push(from);
+        }
       }
 
       return {
@@ -279,28 +246,51 @@ export const CSharpConfig: LanguageConfig = {
       };
     }
 
+    function extractVariable(node: Parser.SyntaxNode, isConst: boolean = false): VariableSymbol | null {
+      const bindingNode = node.descendantsOfType('pattern_binding')[0];
+      if (!bindingNode) return null;
+
+      const patternNode = bindingNode.childForFieldName('pattern');
+      const typeNode = bindingNode.childForFieldName('type');
+      const valueNode = bindingNode.childForFieldName('value');
+
+      if (!patternNode) return null;
+
+      return {
+        name: getNodeText(patternNode),
+        type: isConst ? ST.CONSTANT : ST.VARIABLE,
+        location: getLocation(bindingNode),
+        variableType: typeNode ? getNodeText(typeNode) : undefined,
+        value: valueNode ? getNodeText(valueNode) : undefined
+      };
+    }
+
     function traverse(node: Parser.SyntaxNode) {
-      const isTopLevel = node.parent?.type === 'compilation_unit' || node.parent?.type === 'namespace_declaration';
+      const isTopLevel = node.parent?.type === 'source_file';
 
       if (isTopLevel) {
-        if (node.type === 'class_declaration') {
+        if (node.type === 'function_declaration') {
+          const func = extractFunction(node);
+          if (func) symbols.push(func);
+        } else if (node.type === 'class_declaration') {
           const cls = extractClass(node);
           if (cls) symbols.push(cls);
-        } else if (node.type === 'interface_declaration') {
-          const iface = extractInterface(node);
-          if (iface) symbols.push(iface);
         } else if (node.type === 'struct_declaration') {
           const struct = extractStruct(node);
           if (struct) symbols.push(struct);
         } else if (node.type === 'enum_declaration') {
           const enumDecl = extractEnum(node);
           if (enumDecl) symbols.push(enumDecl);
-        } else if (node.type === 'namespace_declaration') {
-          const ns = extractNamespace(node);
-          if (ns) symbols.push(ns);
-        } else if (node.type === 'using_directive') {
+        } else if (node.type === 'protocol_declaration') {
+          const protocol = extractProtocol(node);
+          if (protocol) symbols.push(protocol);
+        } else if (node.type === 'import_declaration') {
           const importDecl = extractImport(node);
           if (importDecl) symbols.push(importDecl);
+        } else if (node.type === 'property_declaration') {
+          const isLet = node.children.some(c => c.type === 'let');
+          const variable = extractVariable(node, isLet);
+          if (variable) symbols.push(variable);
         }
       }
 

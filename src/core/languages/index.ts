@@ -41,6 +41,7 @@ export async function initializeLanguages(): Promise<void> {
   const { CSharpConfig } = await import('./csharp.js');
   const { RubyConfig } = await import('./ruby.js');
   const { PhpConfig } = await import('./php.js');
+  const { SwiftConfig } = await import('./swift.js');
 
   // Register all languages
   registerLanguage(TypeScriptConfig);
@@ -53,4 +54,5 @@ export async function initializeLanguages(): Promise<void> {
   registerLanguage(CSharpConfig);
   registerLanguage(RubyConfig);
   registerLanguage(PhpConfig);
+  registerLanguage(SwiftConfig);
 }
