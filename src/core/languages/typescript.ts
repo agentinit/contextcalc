@@ -317,6 +317,76 @@ export const TypeScriptConfig: LanguageConfig = {
       // Check if this node is at the top level (parent is program)
       const isTopLevel = node.parent?.type === 'program';
 
+      // Handle export_statement specially - it wraps declarations
+      if (node.type === 'export_statement') {
+        // Check if this export_statement contains a declaration (e.g., export interface Foo)
+        const declaration = node.namedChildren.find(child =>
+          child.type === 'interface_declaration' ||
+          child.type === 'class_declaration' ||
+          child.type === 'abstract_class_declaration' ||
+          child.type === 'function_declaration' ||
+          child.type === 'type_alias_declaration' ||
+          child.type === 'enum_declaration' ||
+          child.type === 'lexical_declaration' ||
+          child.type === 'variable_declaration'
+        );
+
+        if (declaration) {
+          // Extract the declaration directly, not the export wrapper
+          if (declaration.type === 'function_declaration') {
+            const func = extractFunction(declaration);
+            if (func) symbols.push(func);
+          } else if (declaration.type === 'class_declaration' || declaration.type === 'abstract_class_declaration') {
+            const cls = extractClass(declaration);
+            if (cls) symbols.push(cls);
+          } else if (declaration.type === 'interface_declaration') {
+            const iface = extractInterface(declaration);
+            if (iface) symbols.push(iface);
+          } else if (declaration.type === 'type_alias_declaration') {
+            const typeAlias = extractTypeAlias(declaration);
+            if (typeAlias) symbols.push(typeAlias);
+          } else if (declaration.type === 'enum_declaration') {
+            const enumDecl = extractEnum(declaration);
+            if (enumDecl) symbols.push(enumDecl);
+          } else if (declaration.type === 'lexical_declaration' || declaration.type === 'variable_declaration') {
+            // Extract variables/constants from the declaration
+            for (const child of declaration.namedChildren) {
+              if (child.type === 'variable_declarator') {
+                const nameNode = child.childForFieldName('name');
+                const typeNode = child.childForFieldName('type');
+                const valueNode = child.childForFieldName('value');
+                if (nameNode) {
+                  symbols.push({
+                    name: getNodeText(nameNode),
+                    type: declaration.type === 'lexical_declaration' && getNodeText(declaration).startsWith('const') ? ST.CONSTANT : ST.VARIABLE,
+                    location: getLocation(child),
+                    variableType: typeNode ? getNodeText(typeNode) : undefined,
+                    value: valueNode ? getNodeText(valueNode) : undefined
+                  } as VariableSymbol);
+                }
+              }
+            }
+          }
+          // Don't process this export_statement further since we extracted its declaration
+          return;
+        } else {
+          // This is a re-export statement like "export { foo, bar }" or "export * from 'module'"
+          // Only extract these if they actually have content
+          const exportDecl = extractExport(node);
+          if (exportDecl && (exportDecl.exports.length > 0 || exportDecl.default)) {
+            symbols.push(exportDecl);
+          }
+          return;
+        }
+      }
+
+      // Handle export_default separately
+      if (node.type === 'export_default') {
+        const exportDecl = extractExport(node);
+        if (exportDecl) symbols.push(exportDecl);
+        return;
+      }
+
       // Extract top-level declarations only
       if (isTopLevel) {
         if (node.type === 'function_declaration' || node.type === 'function') {
@@ -355,13 +425,10 @@ export const TypeScriptConfig: LanguageConfig = {
         }
       }
 
-      // Import/export statements are naturally top-level, process them regardless
+      // Import statements
       if (node.type === 'import_statement') {
         const importDecl = extractImport(node);
         if (importDecl) symbols.push(importDecl);
-      } else if (node.type === 'export_statement' || node.type === 'export_default') {
-        const exportDecl = extractExport(node);
-        if (exportDecl) symbols.push(exportDecl);
       }
 
       // Continue traversing for nested structures

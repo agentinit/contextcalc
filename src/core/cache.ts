@@ -4,7 +4,7 @@ import type { Cache, CacheEntry } from '../types/index.js';
 import { getCacheDir } from '../utils/pathUtils.js';
 import { hashPath } from './hasher.js';
 
-const CACHE_VERSION = '1.1';
+const CACHE_VERSION = '1.2';
 
 export class CacheManager {
   private cacheDir: string;
