@@ -7,6 +7,7 @@ export interface FileNode {
   type: 'file';
   filetype: string;
   percentage?: number;
+  entities?: Symbol[];
 }
 
 export interface FolderNode {
@@ -43,7 +44,8 @@ export enum OutputFormat {
   TREE = 'tree',
   JSON = 'json',
   FLAT = 'flat',
-  CSV = 'csv'
+  CSV = 'csv',
+  AST = 'ast'
 }
 
 export enum TreeSortBy {
@@ -105,4 +107,133 @@ export interface ScanResult {
   totalFiles: number;
   cacheHits: number;
   cacheMisses: number;
+}
+
+// AST Symbol Types
+export enum SymbolType {
+  FUNCTION = 'function',
+  METHOD = 'method',
+  CLASS = 'class',
+  INTERFACE = 'interface',
+  TYPE = 'type',
+  ENUM = 'enum',
+  VARIABLE = 'variable',
+  CONSTANT = 'constant',
+  IMPORT = 'import',
+  EXPORT = 'export',
+  NAMESPACE = 'namespace',
+  STRUCT = 'struct',
+  TRAIT = 'trait'
+}
+
+export interface SourceLocation {
+  startLine: number;
+  startColumn: number;
+  endLine: number;
+  endColumn: number;
+  startByte: number;
+  endByte: number;
+}
+
+export interface Parameter {
+  name: string;
+  type?: string;
+  optional?: boolean;
+  defaultValue?: string;
+}
+
+export interface BaseSymbol {
+  name: string;
+  type: SymbolType;
+  location: SourceLocation;
+  tokens?: number;
+  docComment?: string;
+}
+
+export interface FunctionSymbol extends BaseSymbol {
+  type: SymbolType.FUNCTION | SymbolType.METHOD;
+  parameters: Parameter[];
+  returnType?: string;
+  async?: boolean;
+  generator?: boolean;
+  signature?: string;
+}
+
+export interface ClassSymbol extends BaseSymbol {
+  type: SymbolType.CLASS;
+  extends?: string;
+  implements?: string[];
+  members: Symbol[];
+  abstract?: boolean;
+}
+
+export interface InterfaceSymbol extends BaseSymbol {
+  type: SymbolType.INTERFACE;
+  extends?: string[];
+  members: Symbol[];
+}
+
+export interface TypeSymbol extends BaseSymbol {
+  type: SymbolType.TYPE;
+  definition?: string;
+}
+
+export interface EnumSymbol extends BaseSymbol {
+  type: SymbolType.ENUM;
+  members: { name: string; value?: string }[];
+}
+
+export interface VariableSymbol extends BaseSymbol {
+  type: SymbolType.VARIABLE | SymbolType.CONSTANT;
+  variableType?: string;
+  value?: string;
+}
+
+export interface ImportSymbol extends BaseSymbol {
+  type: SymbolType.IMPORT;
+  from: string;
+  imports: string[];
+  default?: string;
+  namespace?: string;
+}
+
+export interface ExportSymbol extends BaseSymbol {
+  type: SymbolType.EXPORT;
+  exports: string[];
+  default?: string;
+}
+
+export interface NamespaceSymbol extends BaseSymbol {
+  type: SymbolType.NAMESPACE;
+  members: Symbol[];
+}
+
+export interface StructSymbol extends BaseSymbol {
+  type: SymbolType.STRUCT;
+  fields: { name: string; type?: string }[];
+}
+
+export interface TraitSymbol extends BaseSymbol {
+  type: SymbolType.TRAIT;
+  members: Symbol[];
+}
+
+export type Symbol =
+  | FunctionSymbol
+  | ClassSymbol
+  | InterfaceSymbol
+  | TypeSymbol
+  | EnumSymbol
+  | VariableSymbol
+  | ImportSymbol
+  | ExportSymbol
+  | NamespaceSymbol
+  | StructSymbol
+  | TraitSymbol;
+
+export interface ASTOptions {
+  includeTokens?: boolean;
+  includeLocations?: boolean;
+  includeDocComments?: boolean;
+  maxDepth?: number;
 }

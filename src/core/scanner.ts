@@ -6,28 +6,42 @@ import { IgnoreManager } from '../utils/ignoreParser.js';
 import { shouldIncludeFile, getFileTypeFromExtension } from '../utils/fileDetector.js';
 import { hashFile, hashChildren } from './hasher.js';
 import { parseFileSize } from '../utils/pathUtils.js';
+import { ASTParser } from './astParser.js';
 
 export class DirectoryScanner {
   private cache: CacheManager;
   private tokenizer: Tokenizer;
   private ignoreManager: IgnoreManager;
+  private astParser: ASTParser | null = null;
   private stats = { cacheHits: 0, cacheMisses: 0 };
+  private enableAST: boolean = false;
 
   constructor(
     private projectPath: string,
     private mode: AnalysisMode,
-    private maxFileSize: number = parseFileSize('10M')
+    private maxFileSize: number = parseFileSize('10M'),
+    enableAST: boolean = false
   ) {
     this.cache = new CacheManager(projectPath);
     this.tokenizer = new Tokenizer();
     this.ignoreManager = new IgnoreManager(projectPath);
+    this.enableAST = enableAST;
+    if (enableAST) {
+      this.astParser = new ASTParser();
+    }
   }
 
   async initialize(useGitignore: boolean, useDefaultIgnores: boolean): Promise<void> {
-    await Promise.all([
+    const promises = [
       this.cache.load(),
       this.ignoreManager.initialize(useGitignore, useDefaultIgnores)
-    ]);
+    ];
+
+    if (this.astParser) {
+      promises.push(this.astParser.initialize());
+    }
+
+    await Promise.all(promises);
   }
 
   async scan(): Promise<ScanResult> {
@@ -48,6 +62,9 @@ export class DirectoryScanner {
       };
     } finally {
       this.tokenizer.dispose();
+      if (this.astParser) {
+        this.astParser.dispose();
+      }
     }
   }
 
@@ -142,7 +159,7 @@ export class DirectoryScanner {
         this.stats.cacheMisses++;
       }
 
-      return {
+      const fileNode: FileNode = {
         path: relativePath,
         hash: fileHash,
         tokens,
@@ -151,6 +168,21 @@ export class DirectoryScanner {
         type: 'file',
         filetype: getFileTypeFromExtension(filePath)
       };
+
+      // Parse AST if enabled
+      if (this.enableAST && this.astParser) {
+        try {
+          const entities = await this.astParser.parseFile(filePath);
+          if (entities.length > 0) {
+            fileNode.entities = entities;
+          }
+        } catch (error) {
+          // Silently ignore AST parsing errors
+          console.warn(`Warning: Failed to parse AST for ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
+        }
+      }
+
+      return fileNode;
     } catch (error) {
       console.warn(`Warning: Failed to process file ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
       return null;
