@@ -20,14 +20,15 @@ export class DirectoryScanner {
     private projectPath: string,
     private mode: AnalysisMode,
     private maxFileSize: number = parseFileSize('10M'),
-    enableAST: boolean = false
+    enableAST: boolean = false,
+    private debug: boolean = false
   ) {
     this.cache = new CacheManager(projectPath);
     this.tokenizer = new Tokenizer();
     this.ignoreManager = new IgnoreManager(projectPath);
     this.enableAST = enableAST;
     if (enableAST) {
-      this.astParser = new ASTParser(maxFileSize);
+      this.astParser = new ASTParser(maxFileSize, debug);
     }
   }
 
@@ -47,19 +48,26 @@ export class DirectoryScanner {
   async scan(): Promise<ScanResult> {
     try {
       this.stats = { cacheHits: 0, cacheMisses: 0 };
-      
+
       const rootNode = await this.scanDirectory(this.projectPath);
       const nodes = rootNode ? [rootNode] : [];
-      
+
       await this.cache.save();
 
-      return {
+      const result: ScanResult = {
         nodes,
         totalTokens: nodes.reduce((sum, node) => sum + node.tokens, 0),
         totalFiles: this.countFiles(nodes),
         cacheHits: this.stats.cacheHits,
         cacheMisses: this.stats.cacheMisses
       };
+
+      // Add AST stats if AST parsing was enabled
+      if (this.astParser) {
+        result.astStats = this.astParser.getStats();
+      }
+
+      return result;
     } finally {
       this.tokenizer.dispose();
       if (this.astParser) {

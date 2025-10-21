@@ -224,10 +224,61 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
   }
 
   lines.push('');
-  const summary = useColors
-    ? chalk.dim(`Found ${totalSymbolsCount} symbols across ${totalFiles} files`)
-    : `Found ${totalSymbolsCount} symbols across ${totalFiles} files`;
-  lines.push(summary);
+
+  // Add AST statistics if available
+  if (result.astStats) {
+    const { filesProcessed, filesSkipped, skippedReasons } = result.astStats;
+
+    const statLines: string[] = [];
+
+    // Main summary
+    const summary = `Found ${totalSymbolsCount} symbols across ${filesProcessed} ${filesProcessed === 1 ? 'file' : 'files'}`;
+    statLines.push(useColors ? chalk.dim(summary) : summary);
+
+    // Files skipped information
+    if (filesSkipped > 0) {
+      const skippedSummary = `Skipped ${filesSkipped} ${filesSkipped === 1 ? 'file' : 'files'}`;
+      statLines.push(useColors ? chalk.dim(skippedSummary) : skippedSummary);
+
+      // Group skip reasons
+      const reasonGroups: { [key: string]: string[] } = {};
+      for (const [reason, count] of skippedReasons) {
+        if (reason.startsWith('unsupported: ')) {
+          const ext = reason.replace('unsupported: ', '');
+          if (!reasonGroups['unsupported']) {
+            reasonGroups['unsupported'] = [];
+          }
+          reasonGroups['unsupported'].push(`${ext} (${count})`);
+        } else {
+          if (!reasonGroups[reason]) {
+            reasonGroups[reason] = [];
+          }
+          reasonGroups[reason].push(`${count}`);
+        }
+      }
+
+      // Display grouped reasons
+      for (const [category, items] of Object.entries(reasonGroups)) {
+        if (category === 'unsupported') {
+          const extensions = items.join(', ');
+          const msg = `  - Unsupported extensions: ${extensions}`;
+          statLines.push(useColors ? chalk.dim(msg) : msg);
+        } else {
+          const totalCount = items.reduce((sum, item) => sum + parseInt(item), 0);
+          const msg = `  - ${category}: ${totalCount}`;
+          statLines.push(useColors ? chalk.dim(msg) : msg);
+        }
+      }
+    }
+
+    lines.push(...statLines);
+  } else {
+    // Fallback to simple summary
+    const summary = useColors
+      ? chalk.dim(`Found ${totalSymbolsCount} symbols across ${totalFiles} files`)
+      : `Found ${totalSymbolsCount} symbols across ${totalFiles} files`;
+    lines.push(summary);
+  }
 
   return lines.join('\n');
 }

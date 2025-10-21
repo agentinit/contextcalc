@@ -249,7 +249,7 @@ program
         if (outputFormat === OutputFormat.AST) {
           const tokenizer = new Tokenizer();
           const { ASTParser } = await import('./core/astParser.js');
-          const astParser = new ASTParser(maxFileSize);
+          const astParser = new ASTParser(maxFileSize, isDebug);
 
           try {
             await astParser.initialize();
@@ -273,7 +273,8 @@ program
                 filetype: fileName.split('.').pop() || '',
                 hash: '', // Hash not needed for single file display
                 entities
-              }]
+              }],
+              astStats: astParser.getStats()
             };
 
             const treeOptions: TreeOptions = {
@@ -335,7 +336,7 @@ program
 
       // Enable AST parsing if output format is AST
       const enableAST = outputFormat === OutputFormat.AST;
-      const scanner = new DirectoryScanner(projectPath, mode, maxFileSize, enableAST);
+      const scanner = new DirectoryScanner(projectPath, mode, maxFileSize, enableAST, isDebug);
       await scanner.initialize(options.gitignore, options.defaultIgnores);
       
       const result = await scanner.scan();

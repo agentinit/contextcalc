@@ -14,13 +14,21 @@ export class ASTParser {
   private initialized = false;
   private grammarCache: Map<string, unknown> = new Map();
   private maxFileSize: number;
+  private debug: boolean;
+  private stats = {
+    filesProcessed: 0,
+    filesSkipped: 0,
+    skippedReasons: new Map<string, number>()
+  };
 
   /**
    * Creates a new AST Parser instance.
    * @param maxFileSize - Maximum file size to parse (default: 10MB)
+   * @param debug - Enable debug logging (default: false)
    */
-  constructor(maxFileSize: string | number = '10M') {
+  constructor(maxFileSize: string | number = '10M', debug: boolean = false) {
     this.maxFileSize = typeof maxFileSize === 'string' ? parseFileSize(maxFileSize) : maxFileSize;
+    this.debug = debug;
   }
 
   /**
@@ -54,11 +62,17 @@ export class ASTParser {
     try {
       const fileStats = await stat(filePath);
       if (fileStats.size > this.maxFileSize) {
-        // Silently skip files that are too large - this is expected behavior
+        if (this.debug) {
+          console.error(`[AST Debug] Skipping ${filePath}: file size ${fileStats.size} exceeds max size ${this.maxFileSize}`);
+        }
+        this.recordSkip('file too large');
         return [];
       }
     } catch (error) {
-      // File doesn't exist or can't be read - return empty array
+      if (this.debug) {
+        console.error(`[AST Debug] Cannot read file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+      this.recordSkip('file read error');
       return [];
     }
 
@@ -70,7 +84,10 @@ export class ASTParser {
     try {
       sourceCode = await readFile(filePath, 'utf-8');
     } catch (error) {
-      // File can't be read - return empty array
+      if (this.debug) {
+        console.error(`[AST Debug] Failed to read ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+      this.recordSkip('file read error');
       return [];
     }
 
@@ -119,7 +136,10 @@ export class ASTParser {
     // Get language config
     const languageConfig = getLanguageByExtension(ext);
     if (!languageConfig) {
-      // Silently return empty array for unsupported extensions (e.g., .json, .md)
+      if (this.debug) {
+        console.error(`[AST Debug] Unsupported language for ${sourceName}: extension ${ext}`);
+      }
+      this.recordSkip(`unsupported: ${ext}`);
       return [];
     }
 
@@ -127,10 +147,15 @@ export class ASTParser {
     let grammar = this.grammarCache.get(ext);
     if (!grammar) {
       try {
+        if (this.debug) {
+          console.error(`[AST Debug] Loading grammar for ${languageConfig.name} (${ext})`);
+        }
         grammar = await languageConfig.loadGrammar();
         this.grammarCache.set(ext, grammar);
       } catch (error) {
-        // Failed to load grammar - return empty array
+        if (this.debug) {
+          console.error(`[AST Debug] Failed to load grammar for ${ext}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
         return [];
       }
     }
@@ -139,7 +164,9 @@ export class ASTParser {
     try {
       this.parser.setLanguage(grammar);
     } catch (error) {
-      // Failed to set language - return empty array
+      if (this.debug) {
+        console.error(`[AST Debug] Failed to set language for ${sourceName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
       return [];
     }
 
@@ -148,18 +175,59 @@ export class ASTParser {
     try {
       tree = this.parser.parse(sourceCode);
     } catch (error) {
-      // Failed to parse - return empty array
+      if (this.debug) {
+        console.error(`[AST Debug] Failed to parse ${sourceName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
       return [];
     }
 
     // Extract symbols
     try {
       const symbols = languageConfig.extractSymbols(tree, sourceCode);
+      if (this.debug) {
+        console.error(`[AST Debug] Extracted ${symbols.length} symbols from ${sourceName}`);
+      }
+      // Count as processed if we successfully extracted symbols (even if 0 symbols)
+      this.stats.filesProcessed++;
       return symbols;
     } catch (error) {
-      // Failed to extract symbols - return empty array
+      if (this.debug) {
+        console.error(`[AST Debug] Failed to extract symbols from ${sourceName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+      this.recordSkip('extraction error');
       return [];
     }
+  }
+
+  /**
+   * Gets the parsing statistics.
+   * @returns Statistics object with files processed, skipped, and reasons
+   */
+  getStats() {
+    return {
+      filesProcessed: this.stats.filesProcessed,
+      filesSkipped: this.stats.filesSkipped,
+      skippedReasons: new Map(this.stats.skippedReasons)
+    };
+  }
+
+  /**
+   * Resets the parsing statistics.
+   */
+  resetStats(): void {
+    this.stats.filesProcessed = 0;
+    this.stats.filesSkipped = 0;
+    this.stats.skippedReasons.clear();
+  }
+
+  /**
+   * Records a skip reason in statistics.
+   * @private
+   */
+  private recordSkip(reason: string): void {
+    this.stats.filesSkipped++;
+    const count = this.stats.skippedReasons.get(reason) || 0;
+    this.stats.skippedReasons.set(reason, count + 1);
   }
 
   /**

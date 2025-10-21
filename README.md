@@ -199,9 +199,17 @@ Found 326 symbols across 16 files
 ```
 
 **Supported Languages:**
-- ✅ **TypeScript/TSX** - Full support (functions, classes, interfaces, types, enums, imports/exports)
-- ✅ **JavaScript/JSX** - Full support (all TypeScript features minus types)
-- ✅ **Python** - Full support (functions, classes, imports)
+
+| Language | Extensions | Functions | Classes | Interfaces | Types | Enums | Imports/Exports |
+|----------|-----------|-----------|---------|------------|-------|-------|-----------------|
+| TypeScript | `.ts`, `.tsx` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| JavaScript | `.js`, `.jsx`, `.mjs`, `.cjs` | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Python | `.py`, `.pyi` | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+
+**Notes:**
+- JavaScript supports all symbol types except interfaces, types, and enums (not part of JS spec)
+- Python supports functions, classes, and imports; interfaces/types/enums are not native Python constructs
+- All languages support nested symbols (e.g., class methods, nested functions)
 
 **Symbol Icons:**
 - `ƒ` Function/Method - with parameters, return types, async/generator flags

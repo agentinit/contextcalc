@@ -108,6 +108,11 @@ export interface ScanResult {
   totalFiles: number;
   cacheHits: number;
   cacheMisses: number;
+  astStats?: {
+    filesProcessed: number;
+    filesSkipped: number;
+    skippedReasons: Map<string, number>; // reason -> count
+  };
 }
 
 // AST Symbol Types
@@ -237,4 +242,5 @@ export interface ASTOptions {
   includeLocations?: boolean;
   includeDocComments?: boolean;
   maxDepth?: number;
+  debug?: boolean;
 }
