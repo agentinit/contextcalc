@@ -630,4 +630,424 @@ describe('AST Formatter', () => {
       expect(output).toContain('lines 10-15');
     });
   });
+
+  describe('summary statistics - filesWithSymbols vs filesProcessed', () => {
+    test('uses filesWithSymbols count which includes cache hits', () => {
+      const fileWithSymbols: FileNode = {
+        path: 'service.ts',
+        hash: 'abc123',
+        tokens: 100,
+        lines: 20,
+        size: 400,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'Service',
+          type: SymbolType.CLASS,
+          location: {
+            startLine: 1,
+            startColumn: 0,
+            endLine: 10,
+            endColumn: 1,
+            startByte: 0,
+            endByte: 200
+          },
+          members: []
+        } as ClassSymbol]
+      };
+
+      const result: ScanResult = {
+        nodes: [fileWithSymbols],
+        totalTokens: 100,
+        totalFiles: 1,
+        cacheHits: 1,  // This file was cached
+        cacheMisses: 0,
+        astStats: {
+          filesProcessed: 0,  // No files freshly parsed
+          filesSkipped: 0,
+          skippedReasons: new Map()
+        }
+      };
+
+      const output = formatAsAST(result, mockTreeOptions);
+
+      // Should show 1 file with symbols, not 0 (filesProcessed)
+      expect(output).toContain('Found 1 symbols across 1 file');
+      expect(output).not.toContain('0 file');
+    });
+
+    test('counts all files with symbols regardless of cache status', () => {
+      const file1: FileNode = {
+        path: 'cached.ts',
+        hash: 'abc123',
+        tokens: 50,
+        lines: 10,
+        size: 150,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'cachedFunc',
+          type: SymbolType.FUNCTION,
+          location: {
+            startLine: 1,
+            startColumn: 0,
+            endLine: 3,
+            endColumn: 1,
+            startByte: 0,
+            endByte: 50
+          },
+          parameters: []
+        } as FunctionSymbol]
+      };
+
+      const file2: FileNode = {
+        path: 'fresh.ts',
+        hash: 'def456',
+        tokens: 75,
+        lines: 15,
+        size: 200,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'freshFunc',
+          type: SymbolType.FUNCTION,
+          location: {
+            startLine: 1,
+            startColumn: 0,
+            endLine: 5,
+            endColumn: 1,
+            startByte: 0,
+            endByte: 80
+          },
+          parameters: []
+        } as FunctionSymbol]
+      };
+
+      const result: ScanResult = {
+        nodes: [file1, file2],
+        totalTokens: 125,
+        totalFiles: 2,
+        cacheHits: 1,   // file1 was cached
+        cacheMisses: 1, // file2 was freshly parsed
+        astStats: {
+          filesProcessed: 1,  // Only file2 was freshly parsed
+          filesSkipped: 0,
+          skippedReasons: new Map()
+        }
+      };
+
+      const output = formatAsAST(result, mockTreeOptions);
+
+      // Should show 2 files with symbols (both cached and fresh)
+      expect(output).toContain('Found 2 symbols across 2 files');
+    });
+
+    test('correctly counts symbols in nested structures', () => {
+      const classWithMethods: ClassSymbol = {
+        name: 'ComplexClass',
+        type: SymbolType.CLASS,
+        location: {
+          startLine: 1,
+          startColumn: 0,
+          endLine: 20,
+          endColumn: 1,
+          startByte: 0,
+          endByte: 500
+        },
+        members: [
+          {
+            name: 'method1',
+            type: SymbolType.METHOD,
+            location: {
+              startLine: 2,
+              startColumn: 2,
+              endLine: 5,
+              endColumn: 3,
+              startByte: 20,
+              endByte: 100
+            },
+            parameters: []
+          } as FunctionSymbol,
+          {
+            name: 'method2',
+            type: SymbolType.METHOD,
+            location: {
+              startLine: 7,
+              startColumn: 2,
+              endLine: 10,
+              endColumn: 3,
+              startByte: 120,
+              endByte: 200
+            },
+            parameters: []
+          } as FunctionSymbol,
+          {
+            name: 'method3',
+            type: SymbolType.METHOD,
+            location: {
+              startLine: 12,
+              startColumn: 2,
+              endLine: 15,
+              endColumn: 3,
+              startByte: 220,
+              endByte: 300
+            },
+            parameters: []
+          } as FunctionSymbol
+        ]
+      };
+
+      const fileNode: FileNode = {
+        path: 'complex.ts',
+        hash: 'abc123',
+        tokens: 200,
+        lines: 30,
+        size: 600,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [classWithMethods]
+      };
+
+      const result: ScanResult = {
+        nodes: [fileNode],
+        totalTokens: 200,
+        totalFiles: 1,
+        cacheHits: 0,
+        cacheMisses: 1,
+        astStats: {
+          filesProcessed: 1,
+          filesSkipped: 0,
+          skippedReasons: new Map()
+        }
+      };
+
+      const output = formatAsAST(result, mockTreeOptions);
+
+      // Should count class + 3 methods = 4 symbols total
+      expect(output).toContain('Found 4 symbols');
+      expect(output).toContain('1 file');
+    });
+
+    test('handles files with no symbols correctly', () => {
+      const fileWithNoSymbols: FileNode = {
+        path: 'empty.ts',
+        hash: 'abc123',
+        tokens: 10,
+        lines: 5,
+        size: 50,
+        type: 'file',
+        filetype: 'typescript',
+        entities: []  // Empty array - no symbols
+      };
+
+      const fileWithSymbols: FileNode = {
+        path: 'withSymbols.ts',
+        hash: 'def456',
+        tokens: 50,
+        lines: 10,
+        size: 150,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'test',
+          type: SymbolType.FUNCTION,
+          location: {
+            startLine: 1,
+            startColumn: 0,
+            endLine: 3,
+            endColumn: 1,
+            startByte: 0,
+            endByte: 50
+          },
+          parameters: []
+        } as FunctionSymbol]
+      };
+
+      const result: ScanResult = {
+        nodes: [fileWithNoSymbols, fileWithSymbols],
+        totalTokens: 60,
+        totalFiles: 2,
+        cacheHits: 0,
+        cacheMisses: 2,
+        astStats: {
+          filesProcessed: 2,
+          filesSkipped: 0,
+          skippedReasons: new Map()
+        }
+      };
+
+      const output = formatAsAST(result, mockTreeOptions);
+
+      // Should show 1 symbol in 1 file (only the file with symbols)
+      expect(output).toContain('Found 1 symbols across 1 file');
+    });
+
+    test('uses singular "file" for single file with symbols', () => {
+      const fileNode: FileNode = {
+        path: 'single.ts',
+        hash: 'abc123',
+        tokens: 50,
+        lines: 10,
+        size: 150,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'singleFunc',
+          type: SymbolType.FUNCTION,
+          location: {
+            startLine: 1,
+            startColumn: 0,
+            endLine: 3,
+            endColumn: 1,
+            startByte: 0,
+            endByte: 50
+          },
+          parameters: []
+        } as FunctionSymbol]
+      };
+
+      const result: ScanResult = {
+        nodes: [fileNode],
+        totalTokens: 50,
+        totalFiles: 1,
+        cacheHits: 0,
+        cacheMisses: 1,
+        astStats: {
+          filesProcessed: 1,
+          filesSkipped: 0,
+          skippedReasons: new Map()
+        }
+      };
+
+      const output = formatAsAST(result, mockTreeOptions);
+
+      expect(output).toContain('1 file');
+      expect(output).not.toContain('1 files');
+    });
+
+    test('uses plural "files" for multiple files with symbols', () => {
+      const file1: FileNode = {
+        path: 'first.ts',
+        hash: 'abc123',
+        tokens: 50,
+        lines: 10,
+        size: 150,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'func1',
+          type: SymbolType.FUNCTION,
+          location: { startLine: 1, startColumn: 0, endLine: 3, endColumn: 1, startByte: 0, endByte: 50 },
+          parameters: []
+        } as FunctionSymbol]
+      };
+
+      const file2: FileNode = {
+        path: 'second.ts',
+        hash: 'def456',
+        tokens: 60,
+        lines: 12,
+        size: 180,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'func2',
+          type: SymbolType.FUNCTION,
+          location: { startLine: 1, startColumn: 0, endLine: 4, endColumn: 1, startByte: 0, endByte: 60 },
+          parameters: []
+        } as FunctionSymbol]
+      };
+
+      const result: ScanResult = {
+        nodes: [file1, file2],
+        totalTokens: 110,
+        totalFiles: 2,
+        cacheHits: 0,
+        cacheMisses: 2,
+        astStats: {
+          filesProcessed: 2,
+          filesSkipped: 0,
+          skippedReasons: new Map()
+        }
+      };
+
+      const output = formatAsAST(result, mockTreeOptions);
+
+      expect(output).toContain('2 files');
+      expect(output).not.toContain('2 file');
+    });
+
+    test('correctly distinguishes between filesProcessed and filesWithSymbols when some cached files have symbols', () => {
+      // Scenario: 3 files total
+      // - 1 freshly processed with symbols (filesProcessed = 1)
+      // - 2 cached files, both with symbols
+      // filesWithSymbols should be 3, filesProcessed should be 1
+
+      const freshFile: FileNode = {
+        path: 'fresh.ts',
+        hash: 'fresh123',
+        tokens: 100,
+        lines: 20,
+        size: 300,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'FreshClass',
+          type: SymbolType.CLASS,
+          location: { startLine: 1, startColumn: 0, endLine: 10, endColumn: 1, startByte: 0, endByte: 200 },
+          members: []
+        } as ClassSymbol]
+      };
+
+      const cached1: FileNode = {
+        path: 'cached1.ts',
+        hash: 'cached123',
+        tokens: 80,
+        lines: 15,
+        size: 250,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'cachedFunc1',
+          type: SymbolType.FUNCTION,
+          location: { startLine: 1, startColumn: 0, endLine: 5, endColumn: 1, startByte: 0, endByte: 100 },
+          parameters: []
+        } as FunctionSymbol]
+      };
+
+      const cached2: FileNode = {
+        path: 'cached2.ts',
+        hash: 'cached456',
+        tokens: 90,
+        lines: 18,
+        size: 280,
+        type: 'file',
+        filetype: 'typescript',
+        entities: [{
+          name: 'cachedFunc2',
+          type: SymbolType.FUNCTION,
+          location: { startLine: 1, startColumn: 0, endLine: 6, endColumn: 1, startByte: 0, endByte: 120 },
+          parameters: []
+        } as FunctionSymbol]
+      };
+
+      const result: ScanResult = {
+        nodes: [freshFile, cached1, cached2],
+        totalTokens: 270,
+        totalFiles: 3,
+        cacheHits: 2,    // cached1 and cached2
+        cacheMisses: 1,  // freshFile
+        astStats: {
+          filesProcessed: 1,  // Only freshFile was freshly processed
+          filesSkipped: 0,
+          skippedReasons: new Map()
+        }
+      };
+
+      const output = formatAsAST(result, mockTreeOptions);
+
+      // Should show 3 symbols across 3 files (not just 1 file from filesProcessed)
+      expect(output).toContain('Found 3 symbols across 3 files');
+    });
+  });
 });

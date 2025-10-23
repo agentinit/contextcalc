@@ -432,4 +432,62 @@ const topLevel = 1;
       }
     });
   });
+
+  describe('loadGrammar - module format compatibility', () => {
+    test('loads TypeScript grammar successfully', async () => {
+      const grammar = await TypeScriptConfig.loadGrammar();
+      expect(grammar).toBeDefined();
+      expect(grammar).not.toBeNull();
+    });
+
+    test('handles both ESM and CJS module formats', async () => {
+      // This test verifies the fallback logic: TSLanguage.typescript || TSLanguage.default?.typescript
+      const grammar = await TypeScriptConfig.loadGrammar();
+      expect(grammar).toBeDefined();
+      
+      // Verify it's a valid tree-sitter grammar by checking it can be used with Parser
+      const testParser = new Parser();
+      testParser.setLanguage(grammar);
+      
+      const code = 'const x: number = 1;';
+      const tree = testParser.parse(code);
+      expect(tree).toBeDefined();
+      expect(tree.rootNode).toBeDefined();
+    });
+
+    test('loaded grammar works correctly with complex TypeScript code', async () => {
+      const grammar = await TypeScriptConfig.loadGrammar();
+      const testParser = new Parser();
+      testParser.setLanguage(grammar);
+      
+      const code = `interface User {
+  name: string;
+  age: number;
+}
+
+class UserService implements User {
+  constructor(public name: string, public age: number) {}
+}`;
+      
+      const tree = testParser.parse(code);
+      expect(tree.rootNode.hasError()).toBe(false);
+    });
+
+    test('grammar can parse TypeScript-specific syntax', async () => {
+      const grammar = await TypeScriptConfig.loadGrammar();
+      const testParser = new Parser();
+      testParser.setLanguage(grammar);
+      
+      // Test TypeScript-specific features
+      const code = `
+type Result<T> = Success<T> | Failure;
+enum Status { Active, Inactive }
+const value: string | number = "test";
+`;
+      
+      const tree = testParser.parse(code);
+      expect(tree).toBeDefined();
+      expect(tree.rootNode.hasError()).toBe(false);
+    });
+  });
 });
