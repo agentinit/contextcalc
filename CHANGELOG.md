@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/agentinit/contextcalc/compare/v1.3.6...v1.4.0) (2025-10-23)
+
+
+### Features
+
+* Add AST parsing with tree-sitter for code symbol extraction ([#14](https://github.com/agentinit/contextcalc/issues/14)) ([41053c9](https://github.com/agentinit/contextcalc/commit/41053c9220bab1bae30f67bd92a8212d5bbe6c19))
+
 ## [1.3.6](https://github.com/agentinit/contextcalc/compare/v1.3.5...v1.3.6) (2025-09-20)
 
 
