@@ -144,7 +144,7 @@ export class DirectoryScanner {
     try {
       const relativePath = relative(this.projectPath, filePath);
       const fileHash = stats.hash;
-      
+
       const cachedEntry = this.cache.get(relativePath, fileHash);
 
       let tokens: number;
@@ -202,13 +202,19 @@ export class DirectoryScanner {
           }
         }
 
-        // Cache the entry with AST entities
-        this.cache.set(relativePath, {
+        // Cache the entry with or without AST entities depending on whether AST is enabled
+        // Only include entities field if AST parsing was attempted
+        const cacheEntry: import('../types/index.js').CacheEntry = {
           hash: fileHash,
           tokens,
-          lines,
-          entities
-        });
+          lines
+        };
+
+        if (this.enableAST) {
+          cacheEntry.entities = entities;
+        }
+
+        this.cache.set(relativePath, cacheEntry);
         this.stats.cacheMisses++;
       }
 
