@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/agentinit/contextcalc/compare/v1.4.2...v1.4.3) (2025-10-23)
+
+
+### Bug Fixes
+
+* Fix AST grammar loading and improve file counting ([#17](https://github.com/agentinit/contextcalc/issues/17)) ([9e3f9b2](https://github.com/agentinit/contextcalc/commit/9e3f9b2ed06620b04c08400d52975dfd5aeb2fd0)), closes [#14](https://github.com/agentinit/contextcalc/issues/14)
+
 ## [1.4.2](https://github.com/agentinit/contextcalc/compare/v1.4.1...v1.4.2) (2025-10-23)
 
 
