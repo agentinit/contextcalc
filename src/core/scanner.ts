@@ -144,14 +144,20 @@ export class DirectoryScanner {
     try {
       const relativePath = relative(this.projectPath, filePath);
       const fileHash = stats.hash;
-      
+
       const cachedEntry = this.cache.get(relativePath, fileHash);
 
       let tokens: number;
       let lines: number;
       let entities: import('../types/index.js').ASTSymbol[] | undefined;
 
-      if (cachedEntry) {
+      // If AST parsing is enabled but cached entry doesn't have entities data, treat as cache miss
+      // This ensures we re-parse files when switching to AST output mode
+      // Note: We don't invalidate cache for files with empty entity arrays ([]), as those are valid
+      // (files with no top-level symbols). We only invalidate when entities is undefined (not parsed).
+      const needsASTRefresh = this.enableAST && cachedEntry && cachedEntry.entities === undefined;
+
+      if (cachedEntry && !needsASTRefresh) {
         tokens = cachedEntry.tokens;
         lines = cachedEntry.lines;
         entities = cachedEntry.entities;

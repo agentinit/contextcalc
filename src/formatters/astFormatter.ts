@@ -232,7 +232,8 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
 
     const statLines: string[] = [];
 
-    // Main summary - use actual count of files with symbols
+    // Main summary - use filesWithSymbols which counts files that have symbols,
+    // not filesProcessed which only counts freshly parsed files (excludes cache hits)
     const summary = `Found ${totalSymbolsCount} symbols across ${filesWithSymbols} ${filesWithSymbols === 1 ? 'file' : 'files'}`;
     statLines.push(useColors ? chalk.dim(summary) : summary);
 
