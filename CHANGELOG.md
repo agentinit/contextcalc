@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/agentinit/contextcalc/compare/v1.4.0...v1.4.1) (2025-10-23)
+
+
+### Bug Fixes
+
+* fix ast mode ([#15](https://github.com/agentinit/contextcalc/issues/15)) ([969b5fd](https://github.com/agentinit/contextcalc/commit/969b5fd3dfb642f0273bb07ec7bad9200cf29626))
+
 # [1.4.0](https://github.com/agentinit/contextcalc/compare/v1.3.6...v1.4.0) (2025-10-23)
 
 
