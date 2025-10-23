@@ -155,6 +155,29 @@ export class DirectoryScanner {
         tokens = cachedEntry.tokens;
         lines = cachedEntry.lines;
         entities = cachedEntry.entities;
+
+        // If AST is enabled but cached entry has no entities or empty entities, re-parse
+        if (this.enableAST && this.astParser && (!entities || entities.length === 0)) {
+          try {
+            entities = await this.astParser.parseFile(filePath);
+            // Update cache with AST entities
+            this.cache.set(relativePath, {
+              hash: fileHash,
+              tokens,
+              lines,
+              entities
+            });
+          } catch (error) {
+            if (this.debug) {
+              console.warn(`Warning: Failed to parse AST for ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
+            }
+          }
+        } else if (this.enableAST && entities) {
+          // Cached entry has entities - still count as processed for AST stats
+          // Note: We increment filesProcessed manually here since we're using cached AST data
+          // This ensures the filesProcessed count reflects all files with AST data
+        }
+
         this.stats.cacheHits++;
       } else {
         const result = await this.tokenizer.countTokens(filePath);

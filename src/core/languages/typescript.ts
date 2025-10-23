@@ -5,7 +5,7 @@ import { SymbolType as ST } from '../../types/index.js';
 
 export const TypeScriptConfig: LanguageConfig = {
   name: 'TypeScript',
-  extensions: ['.ts', '.tsx'],
+  extensions: ['.ts'],
 
   loadGrammar: async () => {
     const TSLanguage = await import('tree-sitter-typescript');
@@ -359,20 +359,45 @@ export const TypeScriptConfig: LanguageConfig = {
             const enumDecl = extractEnum(declaration);
             if (enumDecl) symbols.push(enumDecl);
           } else if (declaration.type === 'lexical_declaration' || declaration.type === 'variable_declaration') {
-            // Extract variables/constants from the declaration
+            // Extract variables/constants from the declaration, checking if they're functions
             for (const child of declaration.namedChildren) {
               if (child.type === 'variable_declarator') {
                 const nameNode = child.childForFieldName('name');
                 const typeNode = child.childForFieldName('type');
                 const valueNode = child.childForFieldName('value');
-                if (nameNode) {
-                  symbols.push({
-                    name: getNodeText(nameNode),
-                    type: declaration.type === 'lexical_declaration' && getNodeText(declaration).startsWith('const') ? ST.CONSTANT : ST.VARIABLE,
-                    location: getLocation(child),
-                    variableType: typeNode ? getNodeText(typeNode) : undefined,
-                    value: valueNode ? getNodeText(valueNode) : undefined
-                  } as VariableSymbol);
+                if (nameNode && valueNode) {
+                  // Check if the value is a function (arrow function or function expression)
+                  const isFunctionValue = valueNode.type === 'arrow_function' ||
+                                         valueNode.type === 'function' ||
+                                         valueNode.type === 'function_expression' ||
+                                         valueNode.type === 'generator_function';
+
+                  if (isFunctionValue) {
+                    // Extract as a function symbol
+                    const parameters = extractParameters(valueNode);
+                    const returnTypeNode = valueNode.childForFieldName('return_type');
+                    const isAsync = valueNode.children.some(c => c.type === 'async' || getNodeText(c) === 'async');
+                    const isGenerator = valueNode.type === 'generator_function';
+
+                    symbols.push({
+                      name: getNodeText(nameNode),
+                      type: ST.FUNCTION,
+                      location: getLocation(child),
+                      parameters,
+                      returnType: returnTypeNode ? getNodeText(returnTypeNode) : typeNode ? getNodeText(typeNode) : undefined,
+                      async: isAsync,
+                      generator: isGenerator
+                    } as FunctionSymbol);
+                  } else {
+                    // Extract as a variable/constant
+                    symbols.push({
+                      name: getNodeText(nameNode),
+                      type: declaration.type === 'lexical_declaration' && getNodeText(declaration).startsWith('const') ? ST.CONSTANT : ST.VARIABLE,
+                      location: getLocation(child),
+                      variableType: typeNode ? getNodeText(typeNode) : undefined,
+                      value: valueNode ? getNodeText(valueNode) : undefined
+                    } as VariableSymbol);
+                  }
                 }
               }
             }
@@ -415,20 +440,45 @@ export const TypeScriptConfig: LanguageConfig = {
           const enumDecl = extractEnum(node);
           if (enumDecl) symbols.push(enumDecl);
         } else if (node.type === 'lexical_declaration' || node.type === 'variable_declaration') {
-          // Extract top-level variables/constants
+          // Extract top-level variables/constants, checking if they're functions
           for (const child of node.namedChildren) {
             if (child.type === 'variable_declarator') {
               const nameNode = child.childForFieldName('name');
               const typeNode = child.childForFieldName('type');
               const valueNode = child.childForFieldName('value');
-              if (nameNode) {
-                symbols.push({
-                  name: getNodeText(nameNode),
-                  type: node.type === 'lexical_declaration' && getNodeText(node).startsWith('const') ? ST.CONSTANT : ST.VARIABLE,
-                  location: getLocation(child),
-                  variableType: typeNode ? getNodeText(typeNode) : undefined,
-                  value: valueNode ? getNodeText(valueNode) : undefined
-                } as VariableSymbol);
+              if (nameNode && valueNode) {
+                // Check if the value is a function (arrow function or function expression)
+                const isFunctionValue = valueNode.type === 'arrow_function' ||
+                                       valueNode.type === 'function' ||
+                                       valueNode.type === 'function_expression' ||
+                                       valueNode.type === 'generator_function';
+
+                if (isFunctionValue) {
+                  // Extract as a function symbol
+                  const parameters = extractParameters(valueNode);
+                  const returnTypeNode = valueNode.childForFieldName('return_type');
+                  const isAsync = valueNode.children.some(c => c.type === 'async' || getNodeText(c) === 'async');
+                  const isGenerator = valueNode.type === 'generator_function';
+
+                  symbols.push({
+                    name: getNodeText(nameNode),
+                    type: ST.FUNCTION,
+                    location: getLocation(child),
+                    parameters,
+                    returnType: returnTypeNode ? getNodeText(returnTypeNode) : typeNode ? getNodeText(typeNode) : undefined,
+                    async: isAsync,
+                    generator: isGenerator
+                  } as FunctionSymbol);
+                } else {
+                  // Extract as a variable/constant
+                  symbols.push({
+                    name: getNodeText(nameNode),
+                    type: node.type === 'lexical_declaration' && getNodeText(node).startsWith('const') ? ST.CONSTANT : ST.VARIABLE,
+                    location: getLocation(child),
+                    variableType: typeNode ? getNodeText(typeNode) : undefined,
+                    value: valueNode ? getNodeText(valueNode) : undefined
+                  } as VariableSymbol);
+                }
               }
             }
           }
@@ -450,4 +500,16 @@ export const TypeScriptConfig: LanguageConfig = {
     traverse(rootNode);
     return symbols;
   }
+};
+
+export const TSXConfig: LanguageConfig = {
+  name: 'TypeScript JSX',
+  extensions: ['.tsx'],
+
+  loadGrammar: async () => {
+    const TSLanguage = await import('tree-sitter-typescript');
+    return TSLanguage.tsx;
+  },
+
+  extractSymbols: TypeScriptConfig.extractSymbols
 };
