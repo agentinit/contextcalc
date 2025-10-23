@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/agentinit/contextcalc/compare/v1.4.1...v1.4.2) (2025-10-23)
+
+
+### Bug Fixes
+
+* remove stdin timeout that caused race condition with piped input ([#16](https://github.com/agentinit/contextcalc/issues/16)) ([ef6187b](https://github.com/agentinit/contextcalc/commit/ef6187b865e60bfb7c242c16d810fbf2e8ac1bf5))
+
 ## [1.4.1](https://github.com/agentinit/contextcalc/compare/v1.4.0...v1.4.1) (2025-10-23)
 
 
