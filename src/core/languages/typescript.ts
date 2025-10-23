@@ -165,7 +165,8 @@ export const TypeScriptConfig: LanguageConfig = {
 
       const members: ASTSymbol[] = [];
       const bodyNode = node.childForFieldName('body');
-      const extendsClause = node.children.find(c => c.type === 'extends_type_clause');
+      const extendsClause = node.children.find(c => c.type === 'extends_clause') ??
+                           node.children.find(c => c.type === 'extends_type_clause');
 
       if (bodyNode) {
         for (const child of bodyNode.namedChildren) {
@@ -174,7 +175,7 @@ export const TypeScriptConfig: LanguageConfig = {
             if (memberName) {
               if (child.type === 'method_signature') {
                 const params = extractParameters(child);
-                const returnType = child.childForFieldName('return_type');
+                const returnType = child.childForFieldName('type');
                 members.push({
                   name: getNodeText(memberName),
                   type: ST.METHOD,
@@ -200,7 +201,11 @@ export const TypeScriptConfig: LanguageConfig = {
         name: getNodeText(nameNode),
         type: ST.INTERFACE,
         location: getLocation(node),
-        extends: extendsClause ? [getNodeText(extendsClause)] : undefined,
+        extends: extendsClause
+          ? extendsClause.namedChildren
+              .filter(c => c.type === 'type_identifier')
+              .map(getNodeText)
+          : undefined,
         members
       };
     }
@@ -375,7 +380,8 @@ export const TypeScriptConfig: LanguageConfig = {
                   if (isFunctionValue) {
                     // Extract as a function symbol
                     const parameters = extractParameters(valueNode);
-                    const returnTypeNode = valueNode.childForFieldName('return_type');
+                    const returnTypeNode = valueNode.childForFieldName('return_type') ??
+                                          valueNode.childForFieldName('type');
                     const isAsync = valueNode.children.some(c => c.type === 'async' || getNodeText(c) === 'async');
                     const isGenerator = valueNode.type === 'generator_function';
 
@@ -384,7 +390,7 @@ export const TypeScriptConfig: LanguageConfig = {
                       type: ST.FUNCTION,
                       location: getLocation(child),
                       parameters,
-                      returnType: returnTypeNode ? getNodeText(returnTypeNode) : typeNode ? getNodeText(typeNode) : undefined,
+                      returnType: returnTypeNode ? getNodeText(returnTypeNode) : (typeNode ? getNodeText(typeNode) : undefined),
                       async: isAsync,
                       generator: isGenerator
                     } as FunctionSymbol);
@@ -456,7 +462,8 @@ export const TypeScriptConfig: LanguageConfig = {
                 if (isFunctionValue) {
                   // Extract as a function symbol
                   const parameters = extractParameters(valueNode);
-                  const returnTypeNode = valueNode.childForFieldName('return_type');
+                  const returnTypeNode = valueNode.childForFieldName('return_type') ??
+                                        valueNode.childForFieldName('type');
                   const isAsync = valueNode.children.some(c => c.type === 'async' || getNodeText(c) === 'async');
                   const isGenerator = valueNode.type === 'generator_function';
 
@@ -465,7 +472,7 @@ export const TypeScriptConfig: LanguageConfig = {
                     type: ST.FUNCTION,
                     location: getLocation(child),
                     parameters,
-                    returnType: returnTypeNode ? getNodeText(returnTypeNode) : typeNode ? getNodeText(typeNode) : undefined,
+                    returnType: returnTypeNode ? getNodeText(returnTypeNode) : (typeNode ? getNodeText(typeNode) : undefined),
                     async: isAsync,
                     generator: isGenerator
                   } as FunctionSymbol);

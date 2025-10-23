@@ -156,11 +156,20 @@ export class DirectoryScanner {
         lines = cachedEntry.lines;
         entities = cachedEntry.entities;
 
-        // If AST is enabled but cached entry has no entities or empty entities, re-parse
-        if (this.enableAST && this.astParser && (!entities || entities.length === 0)) {
+        // If AST is enabled but cached entry has never been parsed (entities === undefined), re-parse
+        // Do not reparse if entities is [] (legitimately zero symbols)
+        if (this.enableAST && this.astParser && entities === undefined) {
           try {
             entities = await this.astParser.parseFile(filePath);
-            // Update cache with AST entities
+
+            // If the cached entry has stale token/line counts (zeros), recalculate them
+            if (tokens === 0 || lines === 0) {
+              const result = await this.tokenizer.countTokens(filePath);
+              tokens = result.tokens;
+              lines = result.lines;
+            }
+
+            // Update cache with AST entities and fresh token/line counts
             this.cache.set(relativePath, {
               hash: fileHash,
               tokens,
