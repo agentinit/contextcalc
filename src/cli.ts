@@ -39,24 +39,15 @@ function buildMetricInfo(tokens: number, lines: number, bytes: number, tokenizer
 async function readStdin(): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    let hasData = false;
-    
-    const timeout = setTimeout(() => {
-      if (!hasData) {
-        resolve(''); // No data available, return empty
-      }
-    }, 10); // Very short timeout to detect if data is available
-    
+
     process.stdin.on('data', (chunk) => {
-      hasData = true;
-      clearTimeout(timeout);
       chunks.push(chunk);
     });
-    
+
     process.stdin.on('end', () => {
       resolve(Buffer.concat(chunks).toString('utf8'));
     });
-    
+
     process.stdin.on('error', reject);
   });
 }
