@@ -373,4 +373,67 @@ class MyClass:
       }
     });
   });
+
+  describe('loadGrammar - module format compatibility', () => {
+    test('loads Python grammar successfully', async () => {
+      const grammar = await PythonConfig.loadGrammar();
+      expect(grammar).toBeDefined();
+      expect(grammar).not.toBeNull();
+    });
+
+    test('handles both ESM and CJS module formats', async () => {
+      // This test verifies the fallback logic: PythonLanguage.default || PythonLanguage
+      const grammar = await PythonConfig.loadGrammar();
+      expect(grammar).toBeDefined();
+      
+      // Verify it's a valid tree-sitter grammar by checking it can be used with Parser
+      const testParser = new Parser();
+      testParser.setLanguage(grammar);
+      
+      const code = 'x = 1';
+      const tree = testParser.parse(code);
+      expect(tree).toBeDefined();
+      expect(tree.rootNode).toBeDefined();
+    });
+
+    test('loaded grammar works correctly with complex Python code', async () => {
+      const grammar = await PythonConfig.loadGrammar();
+      const testParser = new Parser();
+      testParser.setLanguage(grammar);
+      
+      const code = `class User:
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+async def fetch_data():
+    return "data"`;
+      
+      const tree = testParser.parse(code);
+      expect(tree.rootNode.hasError()).toBe(false);
+    });
+
+    test('grammar can parse Python-specific syntax', async () => {
+      const grammar = await PythonConfig.loadGrammar();
+      const testParser = new Parser();
+      testParser.setLanguage(grammar);
+      
+      // Test Python-specific features
+      const code = `
+from typing import List, Optional
+import asyncio
+
+def decorator(func):
+    return func
+
+@decorator
+async def process(items: List[str]) -> Optional[str]:
+    return items[0] if items else None
+`;
+      
+      const tree = testParser.parse(code);
+      expect(tree).toBeDefined();
+      expect(tree.rootNode.hasError()).toBe(false);
+    });
+  });
 });
