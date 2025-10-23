@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/agentinit/contextcalc/compare/v1.4.3...v1.4.4) (2025-10-23)
+
+
+### Bug Fixes
+
+* prevent entities field in cache when AST is disabled ([#19](https://github.com/agentinit/contextcalc/issues/19)) ([c8ac0a5](https://github.com/agentinit/contextcalc/commit/c8ac0a5de0d6732410747aeaa18795e3eaf0cfff))
+
 ## [1.4.3](https://github.com/agentinit/contextcalc/compare/v1.4.2...v1.4.3) (2025-10-23)
 
 
