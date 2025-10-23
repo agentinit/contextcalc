@@ -7,6 +7,7 @@ import { formatAsJson } from './formatters/jsonFormatter.js';
 import { formatAsEnhancedTree } from './formatters/enhancedTreeFormatter.js';
 import { formatAsFlat } from './formatters/flatFormatter.js';
 import { formatAsCsv } from './formatters/csvFormatter.js';
+import { formatAsAST } from './formatters/astFormatter.js';
 import { AnalysisMode, OutputFormat, TreeSortBy, MetricType } from './types/index.js';
 import type { TreeOptions, MetricSettings, Node, ScanResult } from './types/index.js';
 import { resolveProjectPath, parseFileSize } from './utils/pathUtils.js';
@@ -105,7 +106,7 @@ program
   .argument('[path]', 'Path to analyze', '.')
   .option('--mode <mode>', 'Analysis mode: all, code, docs', 'all')
   .option('--max-size <size>', 'Maximum file size to analyze (e.g., 10M, 500k)', '10M')
-  .option('-o, --output <format>', 'Output format: tree, json, flat, csv', 'tree')
+  .option('-o, --output <format>', 'Output format: tree, json, flat, csv, ast', 'tree')
   .option('--sort <by>', 'Sort by: tokens, size, name', 'tokens')
   .option('--depth <n>', 'Tree depth levels to display (0=root only, 1=root+children, etc.)', parseInt)
   .option('--min-tokens <n>', 'Hide files with fewer than n tokens', parseInt)
@@ -229,7 +230,8 @@ program
       }
       
       const projectPath = resolveProjectPath(path);
-      
+      const maxFileSize = parseFileSize(options.maxSize);
+
       // Check if the path is a file instead of a directory
       const fs = await import('node:fs/promises');
       let isFile = false;
@@ -240,16 +242,77 @@ program
         console.error(chalk.red('Error:'), `Cannot access path ${projectPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         process.exit(1);
       }
-      
+
       // Handle single file processing
       if (isFile) {
+        // For AST output, we need to use the AST parser
+        if (outputFormat === OutputFormat.AST) {
+          const tokenizer = new Tokenizer();
+          const { ASTParser } = await import('./core/astParser.js');
+          const astParser = new ASTParser(maxFileSize, isDebug);
+
+          try {
+            await astParser.initialize();
+            const result = await tokenizer.countTokens(projectPath);
+            const stats = await fs.stat(projectPath);
+            const fileName = projectPath.split('/').pop() || projectPath;
+            const entities = await astParser.parseFile(projectPath);
+
+            // Build a minimal ScanResult for formatting
+            const scanResult: ScanResult = {
+              totalFiles: 1,
+              totalTokens: result.tokens,
+              cacheHits: 0,
+              cacheMisses: 1,
+              nodes: [{
+                path: fileName,
+                tokens: result.tokens,
+                lines: result.lines,
+                size: stats.size,
+                type: 'file',
+                filetype: fileName.split('.').pop() || '',
+                hash: '', // Hash not needed for single file display
+                entities
+              }],
+              astStats: astParser.getStats()
+            };
+
+            const treeOptions: TreeOptions = {
+              mode,
+              maxSize: options.maxSize,
+              gitignore: options.gitignore,
+              defaultIgnores: options.defaultIgnores,
+              sort: sortBy,
+              depth: options.depth,
+              minTokens: options.minTokens,
+              metrics,
+              absolutePercentages: !options.relativePercentages,
+              showBars: false,
+              colors: !options.noColors,
+              debug: isDebug
+            };
+
+            console.log(formatAsAST(scanResult, { ...treeOptions, showLocations: true }));
+
+            tokenizer.dispose();
+            astParser.dispose();
+            return;
+          } catch (error) {
+            console.error(chalk.red('Error:'), `Failed to process file ${projectPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            tokenizer.dispose();
+            astParser.dispose();
+            process.exit(1);
+          }
+        }
+
+        // For other output formats, use simple tokenizer
         const tokenizer = new Tokenizer();
-        
+
         try {
           const result = await tokenizer.countTokens(projectPath);
           const stats = await fs.stat(projectPath);
           const fileName = projectPath.split('/').pop() || projectPath;
-          
+
           // Format output using metrics settings
           const metricInfo = buildMetricInfo(result.tokens, result.lines, stats.size, tokenizer, metrics, !options.noColors);
           if (!options.noColors) {
@@ -257,7 +320,7 @@ program
           } else {
             console.log(`${fileName} ${metricInfo}`);
           }
-          
+
           tokenizer.dispose();
           return;
         } catch (error) {
@@ -266,14 +329,14 @@ program
           process.exit(1);
         }
       }
-      
-      const maxFileSize = parseFileSize(options.maxSize);
-      
+
       if (isDebug) {
         console.log(chalk.dim(`Analyzing ${projectPath} in ${mode} mode...`));
       }
-      
-      const scanner = new DirectoryScanner(projectPath, mode, maxFileSize);
+
+      // Enable AST parsing if output format is AST
+      const enableAST = outputFormat === OutputFormat.AST;
+      const scanner = new DirectoryScanner(projectPath, mode, maxFileSize, enableAST, isDebug);
       await scanner.initialize(options.gitignore, options.defaultIgnores);
       
       const result = await scanner.scan();
@@ -281,6 +344,24 @@ program
       
       if (outputFormat === OutputFormat.JSON) {
         console.log(formatAsJson(result));
+      } else if (outputFormat === OutputFormat.AST) {
+        // AST format - display parsed symbols
+        const treeOptions: TreeOptions = {
+          mode,
+          maxSize: options.maxSize,
+          gitignore: options.gitignore,
+          defaultIgnores: options.defaultIgnores,
+          sort: sortBy,
+          depth: options.depth,
+          minTokens: options.minTokens,
+          metrics,
+          absolutePercentages: !options.relativePercentages,
+          showBars: false,
+          colors: !options.noColors,
+          debug: isDebug
+        };
+
+        console.log(formatAsAST(result, { ...treeOptions, showLocations: true }));
       } else if (outputFormat === OutputFormat.CSV) {
         // CSV format needs tree options for filtering and sorting
         const treeOptions: TreeOptions = {
@@ -347,7 +428,7 @@ program
       }
       
       const duration = ((endTime - startTime) / 1000).toFixed(2);
-      if (outputFormat === OutputFormat.TREE || outputFormat === OutputFormat.FLAT) {
+      if (outputFormat === OutputFormat.TREE || outputFormat === OutputFormat.FLAT || outputFormat === OutputFormat.AST) {
         if (!options.noColors) {
           console.log(chalk.dim(`Completed in ${duration}s`));
         } else {

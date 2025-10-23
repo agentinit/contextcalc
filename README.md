@@ -29,6 +29,8 @@ https://github.com/user-attachments/assets/3c9556b3-3876-46f7-9a44-707dd8c85000
     - [Tree View (default)](#tree-view-default)
     - [Flat View](#flat-view)
     - [JSON Output](#json-output)
+    - [CSV Output](#csv-output)
+    - [AST Output (Code Symbol Extraction)](#ast-output-code-symbol-extraction)
   - [Options Reference](#options-reference)
   - [Usage Examples](#usage-examples)
     - [Basic Usage](#basic-usage)
@@ -176,11 +178,73 @@ README.md,2208,283,7806,md,9.4
 "Total",23421,1247,87604,"",100.0
 ```
 
+### AST Output (Code Symbol Extraction)
+Extract and display code structure as symbols (functions, classes, interfaces, etc.) using tree-sitter AST parsing:
+```bash
+npx contextcalc . --output ast
+```
+```text
+src/core/scanner.ts (1750 tokens, 258 lines, 7.6KB)
+├─ ← from "node:path" { join, relative } line 1
+├─ C DirectoryScanner lines 11-258
+│  ├─ v cache line 12
+│  ├─ v tokenizer line 13
+│  ├─ ƒ constructor(projectPath: string, mode: AnalysisMode, ...): void lines 19-32
+│  ├─ ƒ async initialize(useGitignore: boolean, ...): Promise<void> lines 34-45
+│  ├─ ƒ async scan(): Promise<ScanResult> lines 47-69
+│  └─ ƒ static calculatePercentages(nodes: Node[]): Node[] lines 237-257
+└─ c CACHE_VERSION line 7
+
+Found 326 symbols across 16 files
+```
+
+**Supported Languages:**
+
+| Language | Extensions | Functions | Classes | Interfaces | Types | Enums | Imports/Exports |
+|----------|-----------|-----------|---------|------------|-------|-------|-----------------|
+| TypeScript | `.ts`, `.tsx` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| JavaScript | `.js`, `.jsx`, `.mjs`, `.cjs` | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Python | `.py`, `.pyi` | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+
+**Notes:**
+- JavaScript supports all symbol types except interfaces, types, and enums (not part of JS spec)
+- Python supports functions, classes, and imports; interfaces/types/enums are not native Python constructs
+- All languages support nested symbols (e.g., class methods, nested functions)
+
+**Symbol Icons:**
+- `ƒ` Function/Method - with parameters, return types, async/generator flags
+- `C` Class - with extends, implements, abstract modifiers
+- `I` Interface - with extends and members
+- `T` Type - type aliases and definitions
+- `E` Enum - with member values
+- `v` Variable - with type annotations
+- `c` Constant - with type annotations
+- `←` Import - showing source and imported items
+- `→` Export - showing exported items
+
+**Features:**
+- **Performance**: AST results are cached - subsequent runs are fast
+- **Selective**: Only enabled with `--output ast` flag
+- **Smart**: Respects `--max-size` limit to prevent OOM on large files
+- **Compatible**: Works with all existing filters (`--mode`, `--depth`, `--min-tokens`)
+
+**Examples:**
+```bash
+# Analyze TypeScript/JavaScript project structure
+npx contextcalc src --output ast --mode code
+
+# Find all classes and functions (depth 2 to see class members)
+npx contextcalc . --output ast --depth 2
+
+# Analyze Python codebase
+npx contextcalc . --output ast --mode code
+```
+
 ## Options Reference
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `-o, --output <format>` | Output format: `tree`, `flat`, `json`, `csv` | `tree` |
+| `-o, --output <format>` | Output format: `tree`, `flat`, `json`, `csv`, `ast` | `tree` |
 | `--mode <mode>` | Files to analyze: `all`, `code`, `docs` | `all` |
 | `--max-size <size>` | Maximum file size to analyze (e.g., 10M, 500k) | `10M` |
 | `--sort <by>` | Sort by: `tokens`, `size`, `name` | `tokens` |

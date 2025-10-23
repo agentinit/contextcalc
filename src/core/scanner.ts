@@ -6,48 +6,73 @@ import { IgnoreManager } from '../utils/ignoreParser.js';
 import { shouldIncludeFile, getFileTypeFromExtension } from '../utils/fileDetector.js';
 import { hashFile, hashChildren } from './hasher.js';
 import { parseFileSize } from '../utils/pathUtils.js';
+import { ASTParser } from './astParser.js';
 
 export class DirectoryScanner {
   private cache: CacheManager;
   private tokenizer: Tokenizer;
   private ignoreManager: IgnoreManager;
+  private astParser: ASTParser | null = null;
   private stats = { cacheHits: 0, cacheMisses: 0 };
+  private enableAST: boolean = false;
 
   constructor(
     private projectPath: string,
     private mode: AnalysisMode,
-    private maxFileSize: number = parseFileSize('10M')
+    private maxFileSize: number = parseFileSize('10M'),
+    enableAST: boolean = false,
+    private debug: boolean = false
   ) {
     this.cache = new CacheManager(projectPath);
     this.tokenizer = new Tokenizer();
     this.ignoreManager = new IgnoreManager(projectPath);
+    this.enableAST = enableAST;
+    if (enableAST) {
+      this.astParser = new ASTParser(maxFileSize, debug);
+    }
   }
 
   async initialize(useGitignore: boolean, useDefaultIgnores: boolean): Promise<void> {
-    await Promise.all([
+    const promises = [
       this.cache.load(),
       this.ignoreManager.initialize(useGitignore, useDefaultIgnores)
-    ]);
+    ];
+
+    if (this.astParser) {
+      promises.push(this.astParser.initialize());
+    }
+
+    await Promise.all(promises);
   }
 
   async scan(): Promise<ScanResult> {
     try {
       this.stats = { cacheHits: 0, cacheMisses: 0 };
-      
+
       const rootNode = await this.scanDirectory(this.projectPath);
       const nodes = rootNode ? [rootNode] : [];
-      
+
       await this.cache.save();
 
-      return {
+      const result: ScanResult = {
         nodes,
         totalTokens: nodes.reduce((sum, node) => sum + node.tokens, 0),
         totalFiles: this.countFiles(nodes),
         cacheHits: this.stats.cacheHits,
         cacheMisses: this.stats.cacheMisses
       };
+
+      // Add AST stats if AST parsing was enabled
+      if (this.astParser) {
+        result.astStats = this.astParser.getStats();
+      }
+
+      return result;
     } finally {
       this.tokenizer.dispose();
+      if (this.astParser) {
+        this.astParser.dispose();
+      }
     }
   }
 
@@ -121,36 +146,52 @@ export class DirectoryScanner {
       const fileHash = stats.hash;
       
       const cachedEntry = this.cache.get(relativePath, fileHash);
-      
+
       let tokens: number;
       let lines: number;
-      
+      let entities: import('../types/index.js').ASTSymbol[] | undefined;
+
       if (cachedEntry) {
         tokens = cachedEntry.tokens;
         lines = cachedEntry.lines;
+        entities = cachedEntry.entities;
         this.stats.cacheHits++;
       } else {
         const result = await this.tokenizer.countTokens(filePath);
         tokens = result.tokens;
         lines = result.lines;
-        
+
+        // Parse AST if enabled (before caching)
+        if (this.enableAST && this.astParser) {
+          try {
+            entities = await this.astParser.parseFile(filePath);
+          } catch (error) {
+            console.warn(`Warning: Failed to parse AST for ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
+          }
+        }
+
+        // Cache the entry with AST entities
         this.cache.set(relativePath, {
           hash: fileHash,
           tokens,
-          lines
+          lines,
+          entities
         });
         this.stats.cacheMisses++;
       }
 
-      return {
+      const fileNode: FileNode = {
         path: relativePath,
         hash: fileHash,
         tokens,
         lines,
         size: stats.size,
         type: 'file',
-        filetype: getFileTypeFromExtension(filePath)
+        filetype: getFileTypeFromExtension(filePath),
+        entities
       };
+
+      return fileNode;
     } catch (error) {
       console.warn(`Warning: Failed to process file ${filePath}:`, error instanceof Error ? error.message : 'Unknown error');
       return null;

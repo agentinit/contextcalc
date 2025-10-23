@@ -18,8 +18,8 @@
   },
   "scripts": {
     "build": "bun run build:lib && bun run build:cli && bun run build:types",
-    "build:lib": "bun build src/lib/index.ts --outdir dist/lib --target node --format esm --external tiktoken",
-    "build:cli": "bun build src/cli.ts --outdir dist --target node --format esm --external tiktoken && chmod +x dist/cli.js",
+    "build:lib": "bun build src/lib/index.ts --outdir dist/lib --target node --format esm --external tiktoken --external tree-sitter --external 'tree-sitter-*'",
+    "build:cli": "bun build src/cli.ts --outdir dist --target node --format esm --external tiktoken --external tree-sitter --external 'tree-sitter-*' && chmod +x dist/cli.js",
     "build:types": "bun run tsc --declaration --emitDeclarationOnly --outDir dist --noEmit false",
     "dev": "bun run src/cli.ts",
     "dev:lib": "bun run src/lib/index.ts",
@@ -52,7 +52,11 @@
     "commander": "^12.1.0",
     "tiktoken": "^1.0.17",
     "ignore": "^5.3.2",
-    "chalk": "^5.3.0"
+    "chalk": "^5.3.0",
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-typescript": "^0.23.0",
+    "tree-sitter-javascript": "^0.23.0",
+    "tree-sitter-python": "^0.23.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
