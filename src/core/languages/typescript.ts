@@ -9,7 +9,8 @@ export const TypeScriptConfig: LanguageConfig = {
 
   loadGrammar: async () => {
     const TSLanguage = await import('tree-sitter-typescript');
-    return TSLanguage.typescript;
+    // Handle both ESM and CJS module formats
+    return TSLanguage.typescript || TSLanguage.default?.typescript;
   },
 
   extractSymbols: (tree: Parser.Tree, sourceCode: string): ASTSymbol[] => {

@@ -9,7 +9,8 @@ export const JavaScriptConfig: LanguageConfig = {
 
   loadGrammar: async () => {
     const JSLanguage = await import('tree-sitter-javascript');
-    return JSLanguage.default;
+    // Handle both ESM and CJS module formats
+    return JSLanguage.default || JSLanguage;
   },
 
   extractSymbols: (tree: Parser.Tree, sourceCode: string): ASTSymbol[] => {

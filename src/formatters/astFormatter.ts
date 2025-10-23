@@ -218,6 +218,7 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
   // Add summary
   const totalFiles = result.totalFiles;
   const totalSymbolsCount = countTotalSymbols(result.nodes);
+  const filesWithSymbols = countFilesWithSymbols(result.nodes);
 
   if (lines.length > 0) {
     lines.pop(); // Remove last blank line
@@ -231,8 +232,9 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
 
     const statLines: string[] = [];
 
-    // Main summary
-    const summary = `Found ${totalSymbolsCount} symbols across ${filesProcessed} ${filesProcessed === 1 ? 'file' : 'files'}`;
+    // Main summary - use filesWithSymbols which counts files that have symbols,
+    // not filesProcessed which only counts freshly parsed files (excludes cache hits)
+    const summary = `Found ${totalSymbolsCount} symbols across ${filesWithSymbols} ${filesWithSymbols === 1 ? 'file' : 'files'}`;
     statLines.push(useColors ? chalk.dim(summary) : summary);
 
     // Files skipped information
@@ -314,6 +316,23 @@ function countTotalSymbols(nodes: Node[]): number {
       });
     }
     return nested;
+  }
+
+  nodes.forEach(countInNode);
+  return count;
+}
+
+function countFilesWithSymbols(nodes: Node[]): number {
+  let count = 0;
+
+  function countInNode(node: Node): void {
+    if (node.type === 'file') {
+      if (node.entities && node.entities.length > 0) {
+        count++;
+      }
+    } else {
+      node.children.forEach(countInNode);
+    }
   }
 
   nodes.forEach(countInNode);

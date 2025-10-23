@@ -9,7 +9,8 @@ export const PythonConfig: LanguageConfig = {
 
   loadGrammar: async () => {
     const PythonLanguage = await import('tree-sitter-python');
-    return PythonLanguage.default;
+    // Handle both ESM and CJS module formats
+    return PythonLanguage.default || PythonLanguage;
   },
 
   extractSymbols: (tree: Parser.Tree, sourceCode: string): ASTSymbol[] => {
