@@ -228,7 +228,7 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
 
   // Add AST statistics if available
   if (result.astStats) {
-    const { filesProcessed, filesSkipped, skippedReasons } = result.astStats;
+    const { filesSkipped, skippedReasons } = result.astStats;
 
     const statLines: string[] = [];
 

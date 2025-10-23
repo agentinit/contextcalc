@@ -31,12 +31,13 @@ export function getSupportedExtensions(): string[] {
 
 export async function initializeLanguages(): Promise<void> {
   // Dynamically import language configs
-  const { TypeScriptConfig } = await import('./typescript.js');
+  const { TypeScriptConfig, TSXConfig } = await import('./typescript.js');
   const { JavaScriptConfig } = await import('./javascript.js');
   const { PythonConfig } = await import('./python.js');
 
   // Register all languages
   registerLanguage(TypeScriptConfig);
+  registerLanguage(TSXConfig);
   registerLanguage(JavaScriptConfig);
   registerLanguage(PythonConfig);
 }
