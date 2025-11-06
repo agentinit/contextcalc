@@ -202,10 +202,12 @@ export function formatAsAST(result: ScanResult, options: ASTFormatterOptions): s
         lines.push(...fileLines);
         lines.push(''); // Add blank line between files
       }
-    } else {
-      // Process folder children
-      for (const child of node.children) {
-        processNode(child);
+    } else if (node.type === 'folder') {
+      // Process folder children recursively
+      if (node.children && Array.isArray(node.children)) {
+        for (const child of node.children) {
+          processNode(child);
+        }
       }
     }
   }
